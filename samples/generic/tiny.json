@@ -1,0 +1,10 @@
+[
+  {
+    "id": "job-1",
+    "queue": "orders",
+    "payload": { "orderId": 1001, "amount": 4290 },
+    "error": { "class": "TimeoutError", "message": "payment gateway timeout" },
+    "attempts": 8,
+    "failedAt": "2026-09-08T14:02:11Z"
+  }
+]

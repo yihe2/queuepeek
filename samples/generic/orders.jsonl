@@ -1,0 +1,3 @@
+{"id":"job-1","queue":"orders","payload":{"orderId":1001,"amount":4290},"error":{"class":"TimeoutError","message":"payment gateway timeout"},"attempts":8,"failedAt":"2026-09-08T14:02:11Z"}
+{"id":"job-2","queue":"orders","payload":{"orderId":1001,"amount":4290},"error":{"class":"TimeoutError","message":"payment gateway timeout"},"attempts":11,"failedAt":"2026-09-08T14:10:44Z"}
+{"id":"job-3","queue":"mailers","payload":{"to":"ops@example.com","template":"order-failed"},"error":"SMTPConnectionError","attempts":2,"failedAt":"2026-09-08T14:12:03Z"}
