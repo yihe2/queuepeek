@@ -47,10 +47,23 @@ queuepeek/
   public/
   samples/
   docs/
+  tests/
   index.html
   package.json
 ```
 
+## Getting Started
+
+```text
+npm install
+npm run dev
+npm test
+```
+
+`npm run dev` opens the empty workbench. Dropping a file records its name only; loaders land next.
+
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md).
+
 ## Status
 
-Early scaffold. Parsers and the workbench UI are not in the tree yet. Design notes live under [docs/](docs/).
+Toolchain, job types, and format-detection stubs are in. Parsers and grouping are not.
