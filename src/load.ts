@@ -19,6 +19,8 @@ export class DumpLoadError extends Error {
   }
 }
 
+const COLLECTION_KEYS = ["Messages", "jobs", "dead", "records", "items"];
+
 function describeValue(value: unknown): string {
   if (value === null) {
     return "null";
@@ -45,6 +47,19 @@ function collectRecords(entries: unknown[]): RecordSet {
   return { records, issues };
 }
 
+function findCollection(root: Record<string, unknown>): unknown[] {
+  for (const key of COLLECTION_KEYS) {
+    const value = root[key];
+    if (Array.isArray(value)) {
+      return value;
+    }
+  }
+
+  throw new DumpLoadError(
+    `Dump object has no record array. Expected one of: ${COLLECTION_KEYS.join(", ")}.`,
+  );
+}
+
 export function parseJsonDump(text: string): RecordSet {
   const trimmed = text.trim();
 
@@ -59,9 +74,13 @@ export function parseJsonDump(text: string): RecordSet {
     throw new DumpLoadError(`Dump is not valid JSON: ${(error as Error).message}`);
   }
 
-  if (!Array.isArray(root)) {
-    throw new DumpLoadError(`Dump root must be an array, found ${describeValue(root)}.`);
+  if (Array.isArray(root)) {
+    return collectRecords(root);
   }
 
-  return collectRecords(root);
+  if (isRecord(root)) {
+    return collectRecords(findCollection(root));
+  }
+
+  throw new DumpLoadError(`Dump root must be an array or object, found ${describeValue(root)}.`);
 }
