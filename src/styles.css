@@ -124,6 +124,31 @@ body {
   color: var(--text) !important;
 }
 
+.issues {
+  max-width: 36rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.issues li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.issues code {
+  margin-right: 0.5rem;
+  color: var(--accent);
+}
+
+.issues .more {
+  border-bottom: none;
+  font-style: italic;
+}
+
 .status {
   padding: 0.45rem 1.25rem;
   border-top: 1px solid var(--line);

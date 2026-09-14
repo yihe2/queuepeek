@@ -1,4 +1,7 @@
+import { detectDumpFormat } from "./detect";
+import { DumpLoadError, parseDump } from "./load";
 import "./styles.css";
+import type { ParseIssue } from "./types";
 
 const root = document.querySelector("#app");
 
@@ -21,32 +24,68 @@ root.innerHTML = `
       <label class="dropzone" id="dropzone">
         <input id="dump-file" type="file" accept=".json,.jsonl,application/json" />
         <strong>Drop a dump here</strong>
-        <span>JSON or JSONL. Parsing is not wired yet; the file name is recorded only.</span>
+        <span>JSON or JSONL. Records are parsed locally; nothing leaves the browser.</span>
         <span class="file-meta" id="file-meta">No file selected.</span>
       </label>
+      <ul class="issues" id="issues" hidden></ul>
     </main>
   </div>
-  <footer class="status" id="status">0 jobs · 0 groups · 0 parse issues</footer>
+  <footer class="status" id="status">0 records · 0 parse issues</footer>
 `;
 
 const input = document.querySelector<HTMLInputElement>("#dump-file");
 const dropzone = document.querySelector("#dropzone");
 const fileMeta = document.querySelector("#file-meta");
+const issueList = document.querySelector("#issues");
 const status = document.querySelector("#status");
 
-if (!input || !dropzone || !fileMeta || !status) {
+if (!input || !dropzone || !fileMeta || !issueList || !status) {
   throw new Error("Missing workbench nodes");
 }
 
-function describeFile(file: File): void {
+const MAX_SHOWN_ISSUES = 20;
+
+function locate(issue: ParseIssue): string {
+  return issue.line === undefined ? `record ${issue.index}` : `line ${issue.line}`;
+}
+
+function renderIssues(issues: ParseIssue[]): void {
+  issueList.innerHTML = issues
+    .slice(0, MAX_SHOWN_ISSUES)
+    .map((issue) => `<li><code>${locate(issue)}</code> ${issue.message}</li>`)
+    .join("");
+
+  if (issues.length > MAX_SHOWN_ISSUES) {
+    issueList.innerHTML += `<li class="more">${issues.length - MAX_SHOWN_ISSUES} more skipped.</li>`;
+  }
+
+  issueList.toggleAttribute("hidden", issues.length === 0);
+}
+
+function loadFile(file: File): void {
   fileMeta.textContent = `${file.name} · ${file.size} bytes`;
-  status.textContent = `selected ${file.name} · parser not attached`;
+
+  file
+    .text()
+    .then((text) => {
+      const { records, issues } = parseDump(file.name, text);
+      const detection = detectDumpFormat(records.map((entry) => entry.record));
+
+      renderIssues(issues);
+      status.textContent = `${records.length} records · ${detection.producer} · ${issues.length} parse issues`;
+    })
+    .catch((error: unknown) => {
+      renderIssues([]);
+      const message =
+        error instanceof DumpLoadError ? error.message : `Could not read ${file.name}.`;
+      status.textContent = message;
+    });
 }
 
 input.addEventListener("change", () => {
   const file = input.files?.[0];
   if (file) {
-    describeFile(file);
+    loadFile(file);
   }
 });
 
@@ -67,6 +106,6 @@ dropzone.addEventListener("drop", (event) => {
   }
   const file = event.dataTransfer?.files[0];
   if (file) {
-    describeFile(file);
+    loadFile(file);
   }
 });
