@@ -3,6 +3,7 @@ import type { ParseIssue } from "./types";
 
 export type LoadedRecord = {
   index: number;
+  line?: number;
   record: Record<string, unknown>;
 };
 
@@ -35,7 +36,7 @@ function collectRecords(entries: unknown[]): RecordSet {
   const records: LoadedRecord[] = [];
   const issues: ParseIssue[] = [];
 
-  entries.forEach((entry, index) => {
+  entries.forEach((entry: unknown, index: number) => {
     if (!isRecord(entry)) {
       issues.push({ index, message: `Expected an object, found ${describeValue(entry)}.` });
       return;
@@ -83,4 +84,62 @@ export function parseJsonDump(text: string): RecordSet {
   }
 
   throw new DumpLoadError(`Dump root must be an array or object, found ${describeValue(root)}.`);
+}
+
+export function parseJsonlDump(text: string): RecordSet {
+  const records: LoadedRecord[] = [];
+  const issues: ParseIssue[] = [];
+  let index = 0;
+
+  text.split(/\r?\n/).forEach((raw, offset) => {
+    const line = offset + 1;
+    const trimmed = raw.trim();
+
+    if (trimmed === "") {
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (error) {
+      issues.push({ index, line, message: `Line is not valid JSON: ${(error as Error).message}` });
+      index += 1;
+      return;
+    }
+
+    if (!isRecord(parsed)) {
+      issues.push({ index, line, message: `Expected an object, found ${describeValue(parsed)}.` });
+      index += 1;
+      return;
+    }
+
+    records.push({ index, line, record: parsed });
+    index += 1;
+  });
+
+  if (records.length === 0 && issues.length === 0) {
+    throw new DumpLoadError("Dump file has no records.");
+  }
+
+  return { records, issues };
+}
+
+function looksLikeJsonl(text: string): boolean {
+  const trimmed = text.trimStart();
+  return trimmed !== "" && !trimmed.startsWith("[") && !trimmed.startsWith("{\n");
+}
+
+export function parseDump(sourceName: string, text: string): RecordSet {
+  const name = sourceName.toLowerCase();
+
+  if (name.endsWith(".jsonl")) {
+    return parseJsonlDump(text);
+  }
+
+  if (name.endsWith(".json")) {
+    return parseJsonDump(text);
+  }
+
+  return looksLikeJsonl(text) ? parseJsonlDump(text) : parseJsonDump(text);
 }
