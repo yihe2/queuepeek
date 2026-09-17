@@ -7,13 +7,13 @@ npm install
 npm run dev
 ```
 
-The workbench is at the URL Vite prints (usually `http://localhost:5173`). You can drop a file on the stage; the parser is not attached yet, so only the file name is shown.
+The workbench is at the URL Vite prints (usually `http://localhost:5173`). Drop `samples/generic/orders.jsonl` on the stage to see the loader report records, producer, and parse issues.
 
 ```text
 npm test
 ```
 
-Runs Vitest. Format detection tests live in `tests/detect.test.ts`.
+Runs Vitest. Loader tests are in `tests/load.test.ts`, normalization in `tests/normalize.test.ts`, and format detection in `tests/detect.test.ts`. Failure messages are catalogued in [load-errors.md](load-errors.md).
 
 ```text
 npm run build

@@ -60,10 +60,10 @@ npm run dev
 npm test
 ```
 
-`npm run dev` opens the empty workbench. Dropping a file records its name only; loaders land next.
+`npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage to see record counts, the detected producer, and any skipped records.
 
-Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md).
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md).
 
 ## Status
 
-Toolchain, job types, and format-detection stubs are in. Parsers and grouping are not.
+Loaders, format detection, and record normalization are in. Grouping, poison rules, and export are not.
