@@ -1,0 +1,57 @@
+{
+  "Messages": [
+    {
+      "MessageId": "5f1c2a9e-3b7d-4c11-9a2e-8d4f0b6e71a1",
+      "ReceiptHandle": "AQEBx3kP9sample-receipt-handle-orders-1",
+      "MD5OfBody": "9d5ed678fe57bcca610140957afab571",
+      "Body": "{\"orderId\":1001,\"amount\":4290,\"currency\":\"CAD\"}",
+      "Attributes": {
+        "ApproximateReceiveCount": "11",
+        "SentTimestamp": "1789909331000",
+        "ApproximateFirstReceiveTimestamp": "1789909332104",
+        "DeadLetterQueueSourceArn": "arn:aws:sqs:ca-central-1:123456789012:orders"
+      },
+      "MessageAttributes": {
+        "ErrorCode": { "StringValue": "200", "DataType": "Number" },
+        "ErrorMessage": { "StringValue": "Task timed out after 30.00 seconds", "DataType": "String" },
+        "RequestID": { "StringValue": "b2f6c1d0-7e44-4f0a-9c3e-1a2b3c4d5e6f", "DataType": "String" }
+      }
+    },
+    {
+      "MessageId": "8a0e4d27-61f3-4b58-b0c9-2e7a5d1f9c34",
+      "ReceiptHandle": "AQEBx3kP9sample-receipt-handle-orders-2",
+      "MD5OfBody": "9d5ed678fe57bcca610140957afab571",
+      "Body": "{\"orderId\":1001,\"amount\":4290,\"currency\":\"CAD\"}",
+      "Attributes": {
+        "ApproximateReceiveCount": "9",
+        "SentTimestamp": "1789909931000",
+        "ApproximateFirstReceiveTimestamp": "1789909932377",
+        "DeadLetterQueueSourceArn": "arn:aws:sqs:ca-central-1:123456789012:orders"
+      },
+      "MessageAttributes": {
+        "ErrorCode": { "StringValue": "200", "DataType": "Number" },
+        "ErrorMessage": { "StringValue": "Task timed out after 30.00 seconds", "DataType": "String" },
+        "RequestID": { "StringValue": "c7a9e2f1-0b3d-4e8a-a1f2-6d5c4b3a2918", "DataType": "String" }
+      }
+    },
+    {
+      "MessageId": "c3d9b1f0-2a64-47e5-8f1b-5e0c7a9d3b62",
+      "ReceiptHandle": "AQEBx3kP9sample-receipt-handle-orders-3",
+      "Body": "{\"Type\":\"Notification\",\"MessageId\":\"e1f2a3b4-sns\",\"TopicArn\":\"arn:aws:sns:ca-central-1:123456789012:order-events\",\"Message\":\"{\\\"orderId\\\":1007,\\\"event\\\":\\\"refund.requested\\\"}\"}",
+      "Attributes": {
+        "ApproximateReceiveCount": "4",
+        "SentTimestamp": "1789910531000",
+        "DeadLetterQueueSourceArn": "arn:aws:sqs:ca-central-1:123456789012:refunds"
+      }
+    },
+    {
+      "MessageId": "f7e6d5c4-b3a2-4918-8a7b-6c5d4e3f2a10",
+      "ReceiptHandle": "AQEBx3kP9sample-receipt-handle-orders-4",
+      "Body": "legacy order ping 1012",
+      "Attributes": {
+        "ApproximateReceiveCount": "2",
+        "SentTimestamp": "1789911131000"
+      }
+    }
+  ]
+}
