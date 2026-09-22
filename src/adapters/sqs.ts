@@ -33,6 +33,21 @@ function readBody(body: unknown): { payload: unknown; payloadText: string } {
   return { payload: unwrapSnsEnvelope(parseJsonText(body)), payloadText: body };
 }
 
+function attribute(record: Record<string, unknown>, key: string): string {
+  const attributes = record.Attributes;
+  return isRecord(attributes) ? text(attributes[key]) : "";
+}
+
+function toCount(value: string): number {
+  const parsed = Number(value);
+  return value !== "" && Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
+}
+
+function epochMillisToIso(value: string): string {
+  const date = new Date(Number(value));
+  return value !== "" && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
+}
+
 export function normalizeSqsRecord(entry: LoadedRecord): Job {
   const { record, index } = entry;
   const { payload, payloadText } = readBody(record.Body);
@@ -45,8 +60,8 @@ export function normalizeSqsRecord(entry: LoadedRecord): Job {
     payloadText,
     errorClass: "",
     errorMessage: "",
-    attempts: 0,
-    failedAt: "",
+    attempts: toCount(attribute(record, "ApproximateReceiveCount")),
+    failedAt: epochMillisToIso(attribute(record, "SentTimestamp")),
     raw: record,
   };
 }
