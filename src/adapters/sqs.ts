@@ -48,13 +48,17 @@ function epochMillisToIso(value: string): string {
   return value !== "" && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
 }
 
+function queueName(urlOrArn: string): string {
+  return urlOrArn.split(/[/:]/).filter(Boolean).pop() ?? "";
+}
+
 export function normalizeSqsRecord(entry: LoadedRecord): Job {
   const { record, index } = entry;
   const { payload, payloadText } = readBody(record.Body);
 
   return {
     id: text(record.MessageId) || `record-${index}`,
-    queue: "",
+    queue: queueName(attribute(record, "DeadLetterQueueSourceArn") || text(record.QueueUrl)),
     producer: "sqs",
     payload,
     payloadText,
