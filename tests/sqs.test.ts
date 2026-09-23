@@ -83,3 +83,39 @@ describe("normalizeSqsRecord attributes", () => {
     expect(sqs({ Body: "{}" }, 5).id).toBe("record-5");
   });
 });
+
+describe("normalizeSqsRecord error attributes", () => {
+  it("reads Lambda failure attributes", () => {
+    const job = sqs({
+      MessageId: "m-1",
+      Body: "{}",
+      MessageAttributes: {
+        ErrorCode: { StringValue: "200", DataType: "Number" },
+        ErrorMessage: { StringValue: "Task timed out after 30.00 seconds", DataType: "String" },
+      },
+    });
+
+    expect(job.errorClass).toBe("200");
+    expect(job.errorMessage).toBe("Task timed out after 30.00 seconds");
+  });
+
+  it("prefers ErrorType over ErrorCode", () => {
+    const job = sqs({
+      MessageId: "m-1",
+      Body: "{}",
+      MessageAttributes: {
+        ErrorType: { StringValue: "PaymentGatewayTimeout", DataType: "String" },
+        ErrorCode: { StringValue: "200", DataType: "Number" },
+      },
+    });
+
+    expect(job.errorClass).toBe("PaymentGatewayTimeout");
+  });
+
+  it("leaves errors empty without message attributes", () => {
+    const job = sqs({ MessageId: "m-1", Body: "{}" });
+
+    expect(job.errorClass).toBe("");
+    expect(job.errorMessage).toBe("");
+  });
+});

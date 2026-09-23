@@ -38,6 +38,15 @@ function attribute(record: Record<string, unknown>, key: string): string {
   return isRecord(attributes) ? text(attributes[key]) : "";
 }
 
+function messageAttribute(record: Record<string, unknown>, key: string): string {
+  const attributes = record.MessageAttributes;
+  if (!isRecord(attributes)) {
+    return "";
+  }
+  const value = attributes[key];
+  return isRecord(value) ? text(value.StringValue) : "";
+}
+
 function toCount(value: string): number {
   const parsed = Number(value);
   return value !== "" && Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
@@ -62,8 +71,8 @@ export function normalizeSqsRecord(entry: LoadedRecord): Job {
     producer: "sqs",
     payload,
     payloadText,
-    errorClass: "",
-    errorMessage: "",
+    errorClass: messageAttribute(record, "ErrorType") || messageAttribute(record, "ErrorCode"),
+    errorMessage: messageAttribute(record, "ErrorMessage"),
     attempts: toCount(attribute(record, "ApproximateReceiveCount")),
     failedAt: epochMillisToIso(attribute(record, "SentTimestamp")),
     raw: record,
