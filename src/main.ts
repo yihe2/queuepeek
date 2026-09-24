@@ -1,3 +1,4 @@
+import { toJobs } from "./adapters";
 import { detectDumpFormat } from "./detect";
 import { DumpLoadError, parseDump } from "./load";
 import "./styles.css";
@@ -30,7 +31,7 @@ root.innerHTML = `
       <ul class="issues" id="issues" hidden></ul>
     </main>
   </div>
-  <footer class="status" id="status">0 records · 0 parse issues</footer>
+  <footer class="status" id="status">0 jobs · 0 parse issues</footer>
 `;
 
 const input = document.querySelector<HTMLInputElement>("#dump-file");
@@ -70,9 +71,12 @@ function loadFile(file: File): void {
     .then((text) => {
       const { records, issues } = parseDump(file.name, text);
       const detection = detectDumpFormat(records.map((entry) => entry.record));
+      const jobs = toJobs(records, detection.producer);
+      const mismatch =
+        detection.mismatches > 0 ? ` · ${detection.mismatches} records look like another producer` : "";
 
       renderIssues(issues);
-      status.textContent = `${records.length} records · ${detection.producer} · ${issues.length} parse issues`;
+      status.textContent = `${jobs.length} jobs · ${detection.producer} · ${issues.length} parse issues${mismatch}`;
     })
     .catch((error: unknown) => {
       renderIssues([]);
