@@ -32,11 +32,12 @@ Expected keys on a record: `MessageId`, `Body`, optional `Attributes` / `Message
 
 - `id` ← `MessageId`
 - `payloadText` ← `Body`
-- if `Body` is JSON, parse into `payload`; otherwise keep the string
+- if `Body` is JSON, parse into `payload` (unwrapping SNS envelopes); otherwise keep the string
 - `attempts` ← `ApproximateReceiveCount` when present
-- `queue` ← attribute `QueueUrl` or a file-level hint, else empty
+- `queue` ← source queue from `DeadLetterQueueSourceArn`, else `QueueUrl`, else empty
+- `errorClass` / `errorMessage` ← Lambda-style `ErrorCode` / `ErrorMessage` message attributes
 
-Out of v1: `ReceiveMessage` against a live queue.
+Full mapping and known gaps: [adapters.md](adapters.md). Out of v1: `ReceiveMessage` against a live queue.
 
 ## Sidekiq
 

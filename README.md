@@ -62,8 +62,8 @@ npm test
 
 `npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage to see record counts, the detected producer, and any skipped records.
 
-Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md).
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md).
 
 ## Status
 
-Loaders, format detection, and record normalization are in. Grouping, poison rules, and export are not.
+Loaders, format detection, and the SQS adapter are in. Try `samples/sqs/orders-dlq.json`. The Sidekiq adapter, grouping, poison rules, and export are not.
