@@ -25,15 +25,16 @@ describe("toJobs", () => {
     expect(job.producer).toBe("generic");
   });
 
-  it("keeps the sidekiq label on the generic mapping until its adapter lands", () => {
+  it("routes Sidekiq records through the Sidekiq adapter", () => {
     const [job] = toJobs(
-      [{ index: 0, record: { jid: "j-1", class: "OrderSync", args: [], error_class: "Boom", retry_count: 3 } }],
+      [{ index: 0, record: { jid: "j-1", class: "OrderSync", args: [7], error_class: "Boom", retry_count: 3 } }],
       "sidekiq",
     );
 
     expect(job.producer).toBe("sidekiq");
     expect(job.id).toBe("j-1");
     expect(job.errorClass).toBe("Boom");
-    expect(job.attempts).toBe(3);
+    expect(job.attempts).toBe(4);
+    expect(job.payload).toEqual({ class: "OrderSync", args: [7] });
   });
 });
