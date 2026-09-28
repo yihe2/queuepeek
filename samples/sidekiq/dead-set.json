@@ -1,0 +1,74 @@
+[
+  {
+    "retry": true,
+    "queue": "default",
+    "class": "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
+    "wrapped": "OrderSyncJob",
+    "args": [
+      {
+        "job_class": "OrderSyncJob",
+        "job_id": "6c1e9a52-0d7f-4b3e-9a41-2f8c5d7e1b90",
+        "queue_name": "default",
+        "arguments": [1001, { "force": true }],
+        "executions": 0
+      }
+    ],
+    "jid": "3f9b2c7d1e4a5b6c7d8e9f01",
+    "created_at": 1790906400123,
+    "enqueued_at": 1790906400125,
+    "error_message": "Net::ReadTimeout with #<TCPSocket:(closed)>",
+    "error_class": "Faraday::TimeoutError",
+    "failed_at": 1790906461.204,
+    "retry_count": 24,
+    "retried_at": 1791497215.882
+  },
+  {
+    "retry": true,
+    "queue": "default",
+    "class": "ActiveJob::QueueAdapters::SidekiqAdapter::JobWrapper",
+    "wrapped": "OrderSyncJob",
+    "args": [
+      {
+        "job_class": "OrderSyncJob",
+        "job_id": "a27d4e81-5c3b-4f60-8e19-7b2a0c9d6f13",
+        "queue_name": "default",
+        "arguments": [1001, { "force": true }],
+        "executions": 0
+      }
+    ],
+    "jid": "8e7d6c5b4a3f2e1d0c9b8a76",
+    "created_at": 1790910000441,
+    "enqueued_at": 1790910000443,
+    "error_message": "Net::ReadTimeout with #<TCPSocket:(closed)>",
+    "error_class": "Faraday::TimeoutError",
+    "failed_at": 1790910061.917,
+    "retry_count": 24,
+    "retried_at": 1791500804.305
+  },
+  {
+    "retry": 5,
+    "queue": "mailers",
+    "class": "WelcomeMailer",
+    "args": ["ops@example.com"],
+    "jid": "b4a577edbccf1d805744efa9",
+    "created_at": 1790992800010,
+    "enqueued_at": 1790992800012,
+    "error_message": "535 5.7.8 Authentication credentials invalid",
+    "error_class": "Net::SMTPAuthenticationError",
+    "failed_at": 1790992801.337,
+    "retry_count": 5,
+    "retried_at": 1791008411.762
+  },
+  {
+    "retry": false,
+    "queue": "imports",
+    "class": "InventoryImportWorker",
+    "args": ["s3://acme-imports/2026-10-01/inventory.csv"],
+    "jid": "0a1b2c3d4e5f60718293a4b5",
+    "created_at": 1791072000550,
+    "enqueued_at": 1791072000552,
+    "error_message": "undefined method `strip' for nil:NilClass",
+    "error_class": "NoMethodError",
+    "failed_at": 1791072004.019
+  }
+]
