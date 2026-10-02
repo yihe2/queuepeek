@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { detectDumpFormat, fingerprintRecord } from "../src/detect";
+import { assertSingleProducer, detectDumpFormat, fingerprintRecord, MixedDumpError } from "../src/detect";
 
 describe("fingerprintRecord", () => {
   it("detects SQS records from MessageId and Body", () => {
@@ -64,5 +64,28 @@ describe("detectDumpFormat", () => {
 
   it("does not call an empty encoded dump redis", () => {
     expect(detectDumpFormat([], { encoded: true }).producer).toBe("unknown");
+  });
+});
+
+describe("assertSingleProducer", () => {
+  it("accepts a dump from one producer", () => {
+    expect(() => assertSingleProducer({ producer: "sqs", mismatches: 0, sampled: 4 })).not.toThrow();
+  });
+
+  it("rejects a mixed dump with the mismatch count", () => {
+    const detection = detectDumpFormat([
+      { MessageId: "1", Body: "{}" },
+      { MessageId: "2", Body: "{}" },
+      { class: "X", args: [], error_class: "Boom" },
+    ]);
+
+    expect(() => assertSingleProducer(detection)).toThrow(MixedDumpError);
+    expect(() => assertSingleProducer(detection)).toThrow("1 of 3 records do not look like sqs");
+  });
+
+  it("ignores unrecognized records when counting mismatches", () => {
+    const detection = detectDumpFormat([{ MessageId: "1", Body: "{}" }, { foo: 1 }]);
+
+    expect(() => assertSingleProducer(detection)).not.toThrow();
   });
 });

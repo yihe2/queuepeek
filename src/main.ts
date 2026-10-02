@@ -1,5 +1,5 @@
 import { toJobs } from "./adapters";
-import { detectDumpFormat } from "./detect";
+import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { DumpLoadError, parseDump } from "./load";
 import "./styles.css";
 import type { ParseIssue } from "./types";
@@ -75,17 +75,18 @@ function loadFile(file: File): void {
         records.map((entry) => entry.record),
         { encoded },
       );
+      assertSingleProducer(detection);
       const jobs = toJobs(records, detection.producer);
-      const mismatch =
-        detection.mismatches > 0 ? ` · ${detection.mismatches} records look like another producer` : "";
 
       renderIssues(issues);
-      status.textContent = `${jobs.length} jobs · ${detection.producer} · ${issues.length} parse issues${mismatch}`;
+      status.textContent = `${jobs.length} jobs · ${detection.producer} · ${issues.length} parse issues`;
     })
     .catch((error: unknown) => {
       renderIssues([]);
       const message =
-        error instanceof DumpLoadError ? error.message : `Could not read ${file.name}.`;
+        error instanceof DumpLoadError || error instanceof MixedDumpError
+          ? error.message
+          : `Could not read ${file.name}.`;
       status.textContent = message;
     });
 }

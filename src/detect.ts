@@ -53,3 +53,19 @@ export function detectDumpFormat(records: unknown[], options: DetectOptions = {}
 
   return { producer, mismatches, sampled: records.length };
 }
+
+export class MixedDumpError extends Error {
+  constructor(detection: FormatDetection) {
+    super(
+      `Dump mixes producers: ${detection.mismatches} of ${detection.sampled} records do not look like ` +
+        `${detection.producer}. Split the file by source and load each part.`,
+    );
+    this.name = "MixedDumpError";
+  }
+}
+
+export function assertSingleProducer(detection: FormatDetection): void {
+  if (detection.mismatches > 0) {
+    throw new MixedDumpError(detection);
+  }
+}
