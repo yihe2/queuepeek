@@ -5,6 +5,8 @@ export type LoadedRecord = {
   index: number;
   line?: number;
   record: Record<string, unknown>;
+  /** The record arrived as a JSON string inside the dump, as Redis list exports store it. */
+  encoded?: boolean;
 };
 
 export type RecordSet = {
@@ -32,17 +34,42 @@ function describeValue(value: unknown): string {
   return typeof value;
 }
 
+type Decoded = { record: Record<string, unknown>; encoded: boolean } | { problem: string };
+
+function decodeEntry(entry: unknown): Decoded {
+  if (isRecord(entry)) {
+    return { record: entry, encoded: false };
+  }
+
+  if (typeof entry !== "string") {
+    return { problem: `Expected an object, found ${describeValue(entry)}.` };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(entry);
+  } catch {
+    parsed = undefined;
+  }
+
+  return isRecord(parsed)
+    ? { record: parsed, encoded: true }
+    : { problem: "String entry is not an encoded JSON object." };
+}
+
 function collectRecords(entries: unknown[]): RecordSet {
   const records: LoadedRecord[] = [];
   const issues: ParseIssue[] = [];
 
   entries.forEach((entry: unknown, index: number) => {
-    if (!isRecord(entry)) {
-      issues.push({ index, message: `Expected an object, found ${describeValue(entry)}.` });
+    const decoded = decodeEntry(entry);
+
+    if ("problem" in decoded) {
+      issues.push({ index, message: decoded.problem });
       return;
     }
 
-    records.push({ index, record: entry });
+    records.push({ index, record: decoded.record, encoded: decoded.encoded });
   });
 
   return { records, issues };
@@ -108,13 +135,15 @@ export function parseJsonlDump(text: string): RecordSet {
       return;
     }
 
-    if (!isRecord(parsed)) {
-      issues.push({ index, line, message: `Expected an object, found ${describeValue(parsed)}.` });
+    const decoded = decodeEntry(parsed);
+
+    if ("problem" in decoded) {
+      issues.push({ index, line, message: decoded.problem });
       index += 1;
       return;
     }
 
-    records.push({ index, line, record: parsed });
+    records.push({ index, line, record: decoded.record, encoded: decoded.encoded });
     index += 1;
   });
 

@@ -24,6 +24,24 @@ describe("parseJsonDump", () => {
     expect(issues).toEqual([{ index: 1, message: "Expected an object, found number." }]);
   });
 
+  it("decodes records stored as JSON strings, as Redis list exports do", () => {
+    const { records, issues } = parseJsonDump(JSON.stringify(['{"class":"X","args":[1]}', { id: "job-2" }]));
+
+    expect(records.map((entry) => entry.encoded)).toEqual([true, false]);
+    expect(records[0].record.class).toBe("X");
+    expect(issues).toEqual([]);
+  });
+
+  it("reports strings that are not encoded objects", () => {
+    const { records, issues } = parseJsonDump(JSON.stringify(["not json", "[1,2]"]));
+
+    expect(records).toEqual([]);
+    expect(issues.map((issue) => issue.message)).toEqual([
+      "String entry is not an encoded JSON object.",
+      "String entry is not an encoded JSON object.",
+    ]);
+  });
+
   it("rejects an empty file", () => {
     expect(() => parseJsonDump("   ")).toThrow(DumpLoadError);
   });
@@ -43,6 +61,7 @@ describe("parseJsonlDump", () => {
 
     expect(records.map((entry) => entry.record.id)).toEqual(["job-1", "job-2"]);
     expect(records.map((entry) => entry.line)).toEqual([1, 3]);
+    expect(records.every((entry) => entry.encoded === false)).toBe(true);
     expect(issues).toEqual([]);
   });
 

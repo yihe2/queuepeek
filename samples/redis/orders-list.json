@@ -1,0 +1,5 @@
+[
+  "{\"id\":\"ord-9f2a\",\"queue\":\"orders:failed\",\"payload\":{\"orderId\":2044,\"step\":\"capture\"},\"error\":{\"class\":\"CardDeclined\",\"message\":\"insufficient_funds\"},\"attempts\":3,\"failedAt\":\"2026-10-01T15:12:40Z\"}",
+  "{\"id\":\"ord-a07c\",\"queue\":\"orders:failed\",\"payload\":{\"orderId\":2051,\"step\":\"capture\"},\"error\":{\"class\":\"CardDeclined\",\"message\":\"do_not_honor\"},\"attempts\":3,\"failedAt\":\"2026-10-01T15:19:02Z\"}",
+  "{\"id\":\"ord-b311\",\"queue\":\"orders:failed\",\"payload\":{\"orderId\":2058,\"step\":\"reserve\"},\"error\":{\"class\":\"StockLockTimeout\",\"message\":\"lock wait exceeded 5000ms\"},\"attempts\":12,\"failedAt\":\"2026-10-01T16:03:55Z\"}"
+]
