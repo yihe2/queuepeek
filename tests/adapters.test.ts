@@ -37,4 +37,15 @@ describe("toJobs", () => {
     expect(job.attempts).toBe(4);
     expect(job.payload).toEqual({ class: "OrderSync", args: [7] });
   });
+
+  it("maps Redis-encoded generic records under the redis label", () => {
+    const [job] = toJobs(
+      [{ index: 0, encoded: true, record: { id: "job-1", payload: { orderId: 1 }, error: "Boom" } }],
+      "redis",
+    );
+
+    expect(job.producer).toBe("redis");
+    expect(job.errorClass).toBe("Boom");
+    expect(job.payload).toEqual({ orderId: 1 });
+  });
 });

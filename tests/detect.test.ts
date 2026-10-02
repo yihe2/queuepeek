@@ -19,8 +19,16 @@ describe("fingerprintRecord", () => {
     ).toBe("sidekiq");
   });
 
+  it("detects Sidekiq jobs without error fields from class and args", () => {
+    expect(fingerprintRecord({ class: "OrderSyncJob", args: [1001], queue: "default" })).toBe("sidekiq");
+  });
+
   it("detects generic records from payload or error", () => {
     expect(fingerprintRecord({ id: "job-1", payload: { orderId: 9 }, error: "Timeout" })).toBe("generic");
+  });
+
+  it("detects generic records that only carry attempts", () => {
+    expect(fingerprintRecord({ id: "job-1", attempts: 3 })).toBe("generic");
   });
 
   it("returns unknown for unrelated objects", () => {
@@ -40,5 +48,21 @@ describe("detectDumpFormat", () => {
     ]);
 
     expect(result).toEqual({ producer: "sqs", mismatches: 1, sampled: 2 });
+  });
+
+  it("labels encoded generic dumps as redis", () => {
+    const result = detectDumpFormat([{ id: "job-1", payload: {} }], { encoded: true });
+
+    expect(result.producer).toBe("redis");
+  });
+
+  it("keeps the Sidekiq label for Redis-encoded Sidekiq jobs", () => {
+    const result = detectDumpFormat([{ class: "X", args: [], error_class: "Boom" }], { encoded: true });
+
+    expect(result.producer).toBe("sidekiq");
+  });
+
+  it("does not call an empty encoded dump redis", () => {
+    expect(detectDumpFormat([], { encoded: true }).producer).toBe("unknown");
   });
 });

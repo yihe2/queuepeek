@@ -8,6 +8,11 @@ export type FormatDetection = {
   sampled: number;
 };
 
+export type DetectOptions = {
+  /** Every record arrived as a JSON string, the shape of a Redis list export. */
+  encoded?: boolean;
+};
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -21,34 +26,30 @@ export function fingerprintRecord(record: unknown): DetectedProducer {
     return "sqs";
   }
 
-  if (
-    typeof record.error_class === "string" ||
-    (typeof record.jid === "string" && typeof record.class === "string" && "args" in record)
-  ) {
+  if (typeof record.error_class === "string" || (typeof record.class === "string" && Array.isArray(record.args))) {
     return "sidekiq";
   }
 
-  if ("payload" in record || typeof record.error === "string" || isRecord(record.error)) {
+  if (
+    "payload" in record ||
+    typeof record.error === "string" ||
+    isRecord(record.error) ||
+    typeof record.attempts === "number"
+  ) {
     return "generic";
   }
 
   return "unknown";
 }
 
-export function detectDumpFormat(records: unknown[]): FormatDetection {
-  if (records.length === 0) {
-    return { producer: "unknown", mismatches: 0, sampled: 0 };
-  }
-
+export function detectDumpFormat(records: unknown[], options: DetectOptions = {}): FormatDetection {
   const fingerprints = records.map(fingerprintRecord);
-  const known = fingerprints.filter((producer) => producer !== "unknown");
+  const first = fingerprints.find((producer) => producer !== "unknown") ?? "unknown";
+  const mismatches = fingerprints.filter((item) => item !== "unknown" && item !== first).length;
 
-  if (known.length === 0) {
-    return { producer: "unknown", mismatches: 0, sampled: records.length };
-  }
-
-  const producer = known[0];
-  const mismatches = fingerprints.filter((item) => item !== "unknown" && item !== producer).length;
+  // Sidekiq jobs stored in Redis keep the Sidekiq adapter; only generic or unrecognized strings become "redis".
+  const producer =
+    options.encoded && records.length > 0 && (first === "generic" || first === "unknown") ? "redis" : first;
 
   return { producer, mismatches, sampled: records.length };
 }

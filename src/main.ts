@@ -70,7 +70,11 @@ function loadFile(file: File): void {
     .text()
     .then((text) => {
       const { records, issues } = parseDump(file.name, text);
-      const detection = detectDumpFormat(records.map((entry) => entry.record));
+      const encoded = records.length > 0 && records.every((entry) => entry.encoded);
+      const detection = detectDumpFormat(
+        records.map((entry) => entry.record),
+        { encoded },
+      );
       const jobs = toJobs(records, detection.producer);
       const mismatch =
         detection.mismatches > 0 ? ` · ${detection.mismatches} records look like another producer` : "";
