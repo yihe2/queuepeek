@@ -8,7 +8,8 @@ Put dump files under `samples/<producer>/`. Drop any of them on the workbench to
 samples/
   generic/     canonical JSON / JSONL
   sqs/         SQS ReceiveMessage-style JSON
-  sidekiq/     Sidekiq dead-set JSON (later)
+  sidekiq/     Sidekiq dead-set JSON
+  redis/       Redis list exports (arrays of JSON strings)
 ```
 
 ## Adding A Fixture
@@ -24,3 +25,5 @@ samples/
 - `generic/orders.jsonl` — three failed jobs, two of them the same payload (poison-rule bait later)
 - `generic/tiny.json` — a one-element JSON array for the array loader
 - `sqs/orders-dlq.json` — four DLQ messages: two identical Lambda timeouts, one SNS-wrapped refund event, one plain-text body with no source queue
+- `sidekiq/dead-set.json` — four dead jobs: two identical ActiveJob `OrderSyncJob` timeouts, an SMTP auth failure, and an import worker with retries disabled
+- `redis/orders-list.json` — three generic order failures stored as JSON strings, one with a high attempt count

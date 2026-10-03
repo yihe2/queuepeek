@@ -66,4 +66,4 @@ Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](
 
 ## Status
 
-Loaders, format detection, and the SQS adapter are in. Try `samples/sqs/orders-dlq.json`. The Sidekiq adapter, grouping, poison rules, and export are not.
+Loaders and the SQS, Sidekiq, and Redis adapters are in, and files that mix producers are rejected. Try any dump under `samples/`. Grouping, poison rules, and export are not.

@@ -13,12 +13,14 @@ These throw `DumpLoadError` and leave the workbench empty.
 | `Dump root must be an array or object, found string.` | Root is a scalar | Wrap records in an array |
 | `Dump object has no record array.` | Object root without a known key | Rename the array to `Messages`, `jobs`, `dead`, `records`, or `items` |
 | `Dump file has no records.` | JSONL file of blank lines only | Re-export the queue |
+| `Dump mixes producers: 2 of 40 records do not look like sqs. ...` | Records from more than one system in one file (`MixedDumpError`) | Split the file by source and load each part |
 
 ## Parse Issues
 
 These are collected and reported per record. Loading continues.
 
 - `Expected an object, found number.` — a scalar inside the record array
+- `String entry is not an encoded JSON object.` — a string in the array that does not decode to an object (Redis list exports store jobs as strings, so plain strings are expected to be JSON)
 - `Line is not valid JSON: ...` — one bad JSONL line; other lines still load
 
 Issues carry a `line` for JSONL and a record `index` for JSON arrays, so the workbench can say `line 42` instead of "something failed".

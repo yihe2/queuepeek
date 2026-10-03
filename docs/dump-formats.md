@@ -43,14 +43,14 @@ Full mapping and known gaps: [adapters.md](adapters.md). Out of v1: `ReceiveMess
 
 Dead-set style records often include `queue`, `class`, `args`, `error_class`, `error_message`, `failed_at`, `retry_count`, `jid`.
 
-- `id` ← `jid` or a hash of the raw record
-- `payload` ← `{ class, args }`
+- `id` ← `jid`, else the record's position
+- `payload` ← `{ class, args }`, unwrapping ActiveJob
 - `errorClass` / `errorMessage` ← Sidekiq error fields
-- `attempts` ← `retry_count`
+- `attempts` ← `retry_count + 1` (Sidekiq counts retries, not executions)
 
 ## Redis
 
-Treat a dump as an array of JSON strings or objects taken from a list/hash. If a string parses as Sidekiq or generic JSON, reuse that adapter. Do not require redis-cli encoding (`*3\r\n...`) in v1.
+A dump is an array of JSON strings taken from a list. Each string is decoded; Sidekiq-shaped jobs reuse the Sidekiq adapter, everything else uses the generic mapping under the `redis` label. Do not require redis-cli encoding (`*3\r\n...`) in v1. Hashes are not supported yet.
 
 ## Generic JSONL
 
@@ -64,7 +64,15 @@ Minimal useful record:
 
 ## Format Detection
 
-Prefer strict files: one producer per dump. Fingerprint the first record; if later records disagree, fail with a count of mismatches rather than silently mixing adapters.
+One producer per dump. Each record is fingerprinted by its keys:
+
+| Producer | Keys |
+| --- | --- |
+| `sqs` | string `MessageId` and a `Body` |
+| `sidekiq` | string `error_class`, or string `class` with an `args` array |
+| `generic` | `payload`, an `error` string or object, or numeric `attempts` |
+
+Records that match nothing are ignored for detection and go through whichever adapter the rest of the file uses. The first recognized record decides the producer. If any other record fingerprints differently, the file is rejected with `MixedDumpError` and a count such as `2 of 40 records do not look like sqs`, rather than silently running two adapters over one file.
 
 ## Poison (v1 rules)
 
