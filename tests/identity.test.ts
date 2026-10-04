@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { sqsIdentity } from "../src/adapters/identity";
 import { normalizeSqsRecord } from "../src/adapters/sqs";
-import { normalizeGenericRecord } from "../src/normalize";
+import { normalizeGenericRecord } from "../src/adapters/generic";
 
 describe("sqsIdentity", () => {
   it("returns the message id and receipt handle from raw", () => {

@@ -1,6 +1,6 @@
-import { isRecord } from "./detect";
-import type { LoadedRecord } from "./load";
-import type { Job, Producer } from "./types";
+import { isRecord } from "../detect";
+import type { LoadedRecord } from "../load";
+import type { Job, Producer } from "../types";
 
 function asString(value: unknown): string {
   if (typeof value === "string") {

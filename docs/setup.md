@@ -13,7 +13,7 @@ The workbench is at the URL Vite prints (usually `http://localhost:5173`). Drop 
 npm test
 ```
 
-Runs Vitest. Loader tests are in `tests/load.test.ts`, normalization in `tests/normalize.test.ts`, and format detection in `tests/detect.test.ts`. Failure messages are catalogued in [load-errors.md](load-errors.md).
+Runs Vitest. Loader tests are in `tests/load.test.ts`, adapters in `tests/sqs.test.ts`, `tests/sidekiq.test.ts`, and `tests/generic.test.ts`, and format detection in `tests/detect.test.ts`. Failure messages are catalogued in [load-errors.md](load-errors.md).
 
 ```text
 npm run build

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeGenericRecord, normalizeRecords } from "../src/normalize";
+import { normalizeGenericRecord, normalizeRecords } from "../src/adapters/generic";
 
 describe("normalizeGenericRecord", () => {
   it("maps a canonical generic record", () => {

@@ -1,6 +1,6 @@
 import type { DetectedProducer } from "../detect";
 import type { LoadedRecord } from "../load";
-import { normalizeRecords } from "../normalize";
+import { normalizeRecords } from "./generic";
 import type { Job } from "../types";
 import { normalizeSidekiqRecord } from "./sidekiq";
 import { normalizeSqsRecord } from "./sqs";
