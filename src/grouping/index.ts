@@ -1,27 +1,34 @@
 import type { Job } from "../types";
+import { normalizeMessage } from "./messages";
 
 export type ErrorGroup = {
   errorClass: string;
+  message: string;
   jobs: Job[];
 };
 
 export function groupJobs(jobs: Job[]): ErrorGroup[] {
-  const buckets = new Map<string, Job[]>();
+  const buckets = new Map<string, ErrorGroup>();
 
   for (const job of jobs) {
     const errorClass = job.errorClass.trim();
-    const bucket = buckets.get(errorClass);
+    const message = normalizeMessage(job.errorMessage);
+    const key = `${errorClass}\u0000${message}`;
+    const bucket = buckets.get(key);
 
     if (bucket) {
-      bucket.push(job);
+      bucket.jobs.push(job);
     } else {
-      buckets.set(errorClass, [job]);
+      buckets.set(key, { errorClass, message, jobs: [job] });
     }
   }
 
-  return [...buckets].map(([errorClass, members]) => ({ errorClass, jobs: members }));
+  return [...buckets.values()];
 }
 
-export function groupLabel(group: Pick<ErrorGroup, "errorClass">): string {
-  return group.errorClass === "" ? "(no error)" : group.errorClass;
+export function groupLabel(group: Pick<ErrorGroup, "errorClass" | "message">): string {
+  if (group.errorClass !== "") {
+    return group.errorClass;
+  }
+  return group.message === "" ? "(no error)" : "(no error class)";
 }
