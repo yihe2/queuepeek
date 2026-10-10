@@ -1,11 +1,13 @@
 import type { Job } from "../types";
 import { normalizeMessage } from "./messages";
+import { pickSample } from "./sample";
 import { summarizeJobs, type GroupSummary } from "./summary";
 
 export type ErrorGroup = GroupSummary & {
   errorClass: string;
   message: string;
   jobs: Job[];
+  sample: Job;
 };
 
 type Bucket = { errorClass: string; message: string; jobs: Job[] };
@@ -30,6 +32,7 @@ export function groupJobs(jobs: Job[]): ErrorGroup[] {
     errorClass,
     message,
     jobs: members,
+    sample: pickSample(members),
     ...summarizeJobs(members),
   }));
 }
