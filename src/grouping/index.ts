@@ -1,9 +1,11 @@
 import type { Job } from "../types";
+import { groupId } from "./ids";
 import { normalizeMessage } from "./messages";
 import { pickSample } from "./sample";
 import { summarizeJobs, type GroupSummary } from "./summary";
 
 export type ErrorGroup = GroupSummary & {
+  id: string;
   errorClass: string;
   message: string;
   jobs: Job[];
@@ -29,6 +31,7 @@ export function groupJobs(jobs: Job[]): ErrorGroup[] {
   }
 
   return [...buckets.values()].map(({ errorClass, message, jobs: members }) => ({
+    id: groupId(errorClass, message),
     errorClass,
     message,
     jobs: members,
