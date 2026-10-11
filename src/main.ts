@@ -1,5 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
+import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
 import "./styles.css";
 import type { ParseIssue } from "./types";
@@ -31,7 +32,7 @@ root.innerHTML = `
       <ul class="issues" id="issues" hidden></ul>
     </main>
   </div>
-  <footer class="status" id="status">0 jobs · 0 parse issues</footer>
+  <footer class="status" id="status">0 jobs · 0 groups · 0 parse issues</footer>
 `;
 
 const input = document.querySelector<HTMLInputElement>("#dump-file");
@@ -77,9 +78,12 @@ function loadFile(file: File): void {
       );
       assertSingleProducer(detection);
       const jobs = toJobs(records, detection.producer);
+      const groups = groupJobs(jobs);
 
       renderIssues(issues);
-      status.textContent = `${jobs.length} jobs · ${detection.producer} · ${issues.length} parse issues`;
+      status.textContent =
+        `${jobs.length} jobs · ${groups.length} groups · ${detection.producer} · ` +
+        `${issues.length} parse issues`;
     })
     .catch((error: unknown) => {
       renderIssues([]);
