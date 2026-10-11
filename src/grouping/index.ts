@@ -14,6 +14,17 @@ export type ErrorGroup = GroupSummary & {
 
 type Bucket = { errorClass: string; message: string; jobs: Job[] };
 
+function compareText(a: string, b: string): number {
+  if (a === b) {
+    return 0;
+  }
+  return a < b ? -1 : 1;
+}
+
+function compareGroups(a: ErrorGroup, b: ErrorGroup): number {
+  return b.count - a.count || compareText(a.errorClass, b.errorClass) || compareText(a.message, b.message);
+}
+
 export function groupJobs(jobs: Job[]): ErrorGroup[] {
   const buckets = new Map<string, Bucket>();
 
@@ -30,14 +41,16 @@ export function groupJobs(jobs: Job[]): ErrorGroup[] {
     }
   }
 
-  return [...buckets.values()].map(({ errorClass, message, jobs: members }) => ({
-    id: groupId(errorClass, message),
-    errorClass,
-    message,
-    jobs: members,
-    sample: pickSample(members),
-    ...summarizeJobs(members),
-  }));
+  return [...buckets.values()]
+    .map(({ errorClass, message, jobs: members }) => ({
+      id: groupId(errorClass, message),
+      errorClass,
+      message,
+      jobs: members,
+      sample: pickSample(members),
+      ...summarizeJobs(members),
+    }))
+    .sort(compareGroups);
 }
 
 export function groupLabel(group: Pick<ErrorGroup, "errorClass" | "message">): string {

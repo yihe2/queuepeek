@@ -57,4 +57,22 @@ describe("groupJobs", () => {
 
     expect(groupLabel(group)).toBe("(no error class)");
   });
+
+  it("orders groups by size, then class, then message", () => {
+    const groups = groupJobs([
+      makeJob({ errorClass: "B" }),
+      makeJob({ errorClass: "A", errorMessage: "second" }),
+      makeJob({ errorClass: "A", errorMessage: "first" }),
+      makeJob({ errorClass: "C" }),
+      makeJob({ errorClass: "C" }),
+      makeJob({ errorClass: "C" }),
+    ]);
+
+    expect(groups.map((group) => `${group.errorClass}:${group.message}`)).toEqual([
+      "C:",
+      "A:first",
+      "A:second",
+      "B:",
+    ]);
+  });
 });
