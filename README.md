@@ -62,8 +62,8 @@ npm test
 
 `npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage to see record counts, the detected producer, and any skipped records.
 
-Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md).
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md). How failures are grouped: [docs/grouping.md](docs/grouping.md).
 
 ## Status
 
-Loaders and the SQS, Sidekiq, and Redis adapters are in, and files that mix producers are rejected. Try any dump under `samples/`. Grouping, poison rules, and export are not.
+Loaders, the SQS, Sidekiq, and Redis adapters, and error grouping are in. Try any dump under `samples/`; the status line shows jobs and groups. The job table, filters, poison rules, and export are not.
