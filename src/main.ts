@@ -4,6 +4,7 @@ import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
 import "./styles.css";
 import type { ParseIssue } from "./types";
+import { escapeHtml } from "./ui/escape";
 
 const root = document.querySelector("#app");
 
@@ -54,7 +55,7 @@ function locate(issue: ParseIssue): string {
 function renderIssues(issues: ParseIssue[]): void {
   issueList.innerHTML = issues
     .slice(0, MAX_SHOWN_ISSUES)
-    .map((issue) => `<li><code>${locate(issue)}</code> ${issue.message}</li>`)
+    .map((issue) => `<li><code>${locate(issue)}</code> ${escapeHtml(issue.message)}</li>`)
     .join("");
 
   if (issues.length > MAX_SHOWN_ISSUES) {
