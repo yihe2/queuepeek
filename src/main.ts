@@ -2,9 +2,12 @@ import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
+import { emptyState, loadGroups, selectGroup, type WorkbenchState } from "./state";
 import "./styles.css";
 import type { ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
+import { plural } from "./ui/format";
+import { renderGroupList } from "./ui/sidebar";
 
 const root = document.querySelector("#app");
 
@@ -20,10 +23,9 @@ root.innerHTML = `
   <div class="workspace">
     <aside class="sidebar">
       <h2>Groups</h2>
-      <p class="empty">No dump loaded.</p>
+      <div id="groups"></div>
     </aside>
     <main class="stage">
-      <h2>Jobs</h2>
       <label class="dropzone" id="dropzone">
         <input id="dump-file" type="file" accept=".json,.jsonl,application/json" />
         <strong>Drop a dump here</strong>
@@ -33,20 +35,31 @@ root.innerHTML = `
       <ul class="issues" id="issues" hidden></ul>
     </main>
   </div>
-  <footer class="status" id="status">0 jobs · 0 groups · 0 parse issues</footer>
+  <footer class="status" id="status">No dump loaded.</footer>
 `;
 
-const input = document.querySelector<HTMLInputElement>("#dump-file");
-const dropzone = document.querySelector("#dropzone");
-const fileMeta = document.querySelector("#file-meta");
-const issueList = document.querySelector("#issues");
-const status = document.querySelector("#status");
-
-if (!input || !dropzone || !fileMeta || !issueList || !status) {
-  throw new Error("Missing workbench nodes");
+function byId<T extends HTMLElement = HTMLElement>(id: string): T {
+  const node = document.getElementById(id);
+  if (!node) {
+    throw new Error(`Missing #${id}`);
+  }
+  return node as T;
 }
 
+const input = byId<HTMLInputElement>("dump-file");
+const dropzone = byId("dropzone");
+const fileMeta = byId("file-meta");
+const issueList = byId("issues");
+const groupsNode = byId("groups");
+const status = byId("status");
+
 const MAX_SHOWN_ISSUES = 20;
+
+let state: WorkbenchState = emptyState;
+
+function render(): void {
+  renderGroupList(groupsNode, state.groups, state.selectedGroupId);
+}
 
 function locate(issue: ParseIssue): string {
   return issue.line === undefined ? `record ${issue.index}` : `line ${issue.line}`;
@@ -65,6 +78,10 @@ function renderIssues(issues: ParseIssue[]): void {
   issueList.toggleAttribute("hidden", issues.length === 0);
 }
 
+function closestData(event: Event, attribute: string): HTMLElement | null {
+  return event.target instanceof Element ? event.target.closest<HTMLElement>(`[${attribute}]`) : null;
+}
+
 function loadFile(file: File): void {
   fileMeta.textContent = `${file.name} · ${file.size} bytes`;
 
@@ -81,10 +98,12 @@ function loadFile(file: File): void {
       const jobs = toJobs(records, detection.producer);
       const groups = groupJobs(jobs);
 
+      state = loadGroups(groups, state);
       renderIssues(issues);
+      render();
       status.textContent =
-        `${jobs.length} jobs · ${groups.length} groups · ${detection.producer} · ` +
-        `${issues.length} parse issues`;
+        `${plural(jobs.length, "job")} · ${plural(groups.length, "group")} · ${detection.producer} · ` +
+        `${plural(issues.length, "parse issue")}`;
     })
     .catch((error: unknown) => {
       renderIssues([]);
@@ -95,6 +114,14 @@ function loadFile(file: File): void {
       status.textContent = message;
     });
 }
+
+groupsNode.addEventListener("click", (event) => {
+  const groupId = closestData(event, "data-group-id")?.dataset.groupId;
+  if (groupId) {
+    state = selectGroup(state, groupId);
+    render();
+  }
+});
 
 input.addEventListener("change", () => {
   const file = input.files?.[0];
@@ -123,3 +150,5 @@ dropzone.addEventListener("drop", (event) => {
     loadFile(file);
   }
 });
+
+render();

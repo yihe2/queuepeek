@@ -55,7 +55,7 @@ body {
 
 .workspace {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 300px 1fr;
   min-height: 0;
 }
 
@@ -67,6 +67,76 @@ body {
 
 .sidebar {
   border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.group:hover {
+  background: #1d212c;
+}
+
+.group.is-selected {
+  border-color: var(--line);
+  background: #1f2430;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.group-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.group-head strong {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.group .count {
+  flex: none;
+  min-width: 1.75rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #2a3140;
+  color: var(--text);
+  font-size: 0.75rem;
+  line-height: 1.4rem;
+  text-align: center;
+}
+
+.group-message,
+.group-queues {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.group-message {
+  font-family: Consolas, "SFMono-Regular", monospace;
 }
 
 .sidebar h2,
