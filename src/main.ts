@@ -103,6 +103,7 @@ function loadFile(file: File): void {
       const groups = groupJobs(jobs);
 
       state = loadGroups(groups, state);
+      dropzone.classList.add("is-compact");
       renderIssues(issues);
       render();
       status.textContent =
