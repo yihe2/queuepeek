@@ -2,12 +2,13 @@ import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
-import { emptyState, loadGroups, selectGroup, type WorkbenchState } from "./state";
+import { emptyState, loadGroups, selectedGroup, selectGroup, selectJob, type WorkbenchState } from "./state";
 import "./styles.css";
 import type { ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
 import { plural } from "./ui/format";
 import { renderGroupList } from "./ui/sidebar";
+import { renderJobTable } from "./ui/table";
 
 const root = document.querySelector("#app");
 
@@ -33,6 +34,7 @@ root.innerHTML = `
         <span class="file-meta" id="file-meta">No file selected.</span>
       </label>
       <ul class="issues" id="issues" hidden></ul>
+      <section class="jobs-panel" id="jobs"></section>
     </main>
   </div>
   <footer class="status" id="status">No dump loaded.</footer>
@@ -51,6 +53,7 @@ const dropzone = byId("dropzone");
 const fileMeta = byId("file-meta");
 const issueList = byId("issues");
 const groupsNode = byId("groups");
+const jobsNode = byId("jobs");
 const status = byId("status");
 
 const MAX_SHOWN_ISSUES = 20;
@@ -59,6 +62,7 @@ let state: WorkbenchState = emptyState;
 
 function render(): void {
   renderGroupList(groupsNode, state.groups, state.selectedGroupId);
+  renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId);
 }
 
 function locate(issue: ParseIssue): string {
@@ -119,6 +123,14 @@ groupsNode.addEventListener("click", (event) => {
   const groupId = closestData(event, "data-group-id")?.dataset.groupId;
   if (groupId) {
     state = selectGroup(state, groupId);
+    render();
+  }
+});
+
+jobsNode.addEventListener("click", (event) => {
+  const jobId = closestData(event, "data-job-id")?.dataset.jobId;
+  if (jobId !== undefined) {
+    state = selectJob(state, jobId);
     render();
   }
 });

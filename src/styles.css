@@ -219,6 +219,103 @@ body {
   font-style: italic;
 }
 
+.jobs-panel {
+  margin-top: 1.25rem;
+}
+
+.jobs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stage .jobs-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+
+.jobs-head span {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.jobs-message {
+  margin: 0.35rem 0 0.9rem;
+  color: var(--muted);
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+
+.jobs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.jobs th,
+.jobs td {
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.jobs th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.jobs tbody tr {
+  cursor: pointer;
+}
+
+.jobs tbody tr:hover {
+  background: #1a1e28;
+}
+
+.jobs tbody tr.is-selected {
+  background: #232a37;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.jobs .num {
+  text-align: right;
+}
+
+.jobs .job-id,
+.jobs .time {
+  font-family: Consolas, "SFMono-Regular", monospace;
+}
+
+.jobs .job-id {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobs .preview {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+
 .status {
   padding: 0.45rem 1.25rem;
   border-top: 1px solid var(--line);
