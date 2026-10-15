@@ -2,11 +2,20 @@ import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
-import { emptyState, loadGroups, selectedGroup, selectGroup, selectJob, type WorkbenchState } from "./state";
+import {
+  emptyState,
+  loadGroups,
+  selectedGroup,
+  selectedJob,
+  selectGroup,
+  selectJob,
+  type WorkbenchState,
+} from "./state";
 import "./styles.css";
 import type { ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
 import { plural } from "./ui/format";
+import { renderPayload } from "./ui/payload";
 import { renderGroupList } from "./ui/sidebar";
 import { renderJobTable } from "./ui/table";
 
@@ -36,6 +45,10 @@ root.innerHTML = `
       <ul class="issues" id="issues" hidden></ul>
       <section class="jobs-panel" id="jobs"></section>
     </main>
+    <aside class="inspector">
+      <h2>Payload</h2>
+      <div id="payload"></div>
+    </aside>
   </div>
   <footer class="status" id="status">No dump loaded.</footer>
 `;
@@ -54,6 +67,7 @@ const fileMeta = byId("file-meta");
 const issueList = byId("issues");
 const groupsNode = byId("groups");
 const jobsNode = byId("jobs");
+const payloadNode = byId("payload");
 const status = byId("status");
 
 const MAX_SHOWN_ISSUES = 20;
@@ -63,6 +77,7 @@ let state: WorkbenchState = emptyState;
 function render(): void {
   renderGroupList(groupsNode, state.groups, state.selectedGroupId);
   renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId);
+  renderPayload(payloadNode, selectedJob(state));
 }
 
 function locate(issue: ParseIssue): string {
