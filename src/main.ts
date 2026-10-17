@@ -42,6 +42,7 @@ root.innerHTML = `
         <span>JSON or JSONL. Records are parsed locally; nothing leaves the browser.</span>
         <span class="file-meta" id="file-meta">No file selected.</span>
       </label>
+      <div class="load-error" id="load-error" role="alert" hidden></div>
       <ul class="issues" id="issues" hidden></ul>
       <section class="jobs-panel" id="jobs"></section>
     </main>
@@ -64,6 +65,7 @@ function byId<T extends HTMLElement = HTMLElement>(id: string): T {
 const input = byId<HTMLInputElement>("dump-file");
 const dropzone = byId("dropzone");
 const fileMeta = byId("file-meta");
+const loadError = byId("load-error");
 const issueList = byId("issues");
 const groupsNode = byId("groups");
 const jobsNode = byId("jobs");
@@ -97,6 +99,11 @@ function renderIssues(issues: ParseIssue[]): void {
   issueList.toggleAttribute("hidden", issues.length === 0);
 }
 
+function showLoadError(message: string | null): void {
+  loadError.textContent = message ?? "";
+  loadError.toggleAttribute("hidden", message === null);
+}
+
 function closestData(event: Event, attribute: string): HTMLElement | null {
   return event.target instanceof Element ? event.target.closest<HTMLElement>(`[${attribute}]`) : null;
 }
@@ -119,6 +126,7 @@ function loadFile(file: File): void {
 
       state = loadGroups(groups, state);
       dropzone.classList.add("is-compact");
+      showLoadError(null);
       renderIssues(issues);
       render();
       status.textContent =
@@ -126,12 +134,16 @@ function loadFile(file: File): void {
         `${plural(issues.length, "parse issue")}`;
     })
     .catch((error: unknown) => {
-      renderIssues([]);
       const message =
         error instanceof DumpLoadError || error instanceof MixedDumpError
           ? error.message
           : `Could not read ${file.name}.`;
-      status.textContent = message;
+      state = emptyState;
+      dropzone.classList.remove("is-compact");
+      showLoadError(message);
+      renderIssues([]);
+      render();
+      status.textContent = "No dump loaded.";
     });
 }
 
