@@ -60,10 +60,10 @@ npm run dev
 npm test
 ```
 
-`npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage to see record counts, the detected producer, and any skipped records.
+`npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage, pick an error group on the left, and click a job to read its payload.
 
-Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md). How failures are grouped: [docs/grouping.md](docs/grouping.md).
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md). How failures are grouped: [docs/grouping.md](docs/grouping.md). Workbench panes: [docs/workbench.md](docs/workbench.md).
 
 ## Status
 
-Loaders, the SQS, Sidekiq, and Redis adapters, and error grouping are in. Try any dump under `samples/`; the status line shows jobs and groups. The job table, filters, poison rules, and export are not.
+Loaders, the SQS, Sidekiq, and Redis adapters, error grouping, and the three-pane workbench (groups, job table, payload) are in. Filters, sorting, payload editing, poison rules, and export are not.
