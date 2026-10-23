@@ -1,5 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
+import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import { DumpLoadError, parseDump } from "./load";
 import {
@@ -12,8 +13,9 @@ import {
   type WorkbenchState,
 } from "./state";
 import "./styles.css";
-import type { ParseIssue } from "./types";
+import type { Job, ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
+import { readFilterBar, renderFilterBar, showFilterCount } from "./ui/filters";
 import { plural } from "./ui/format";
 import { renderPayload } from "./ui/payload";
 import { renderGroupList } from "./ui/sidebar";
@@ -44,6 +46,7 @@ root.innerHTML = `
       </label>
       <div class="load-error" id="load-error" role="alert" hidden></div>
       <ul class="issues" id="issues" hidden></ul>
+      <form class="filter-bar" id="filters" hidden></form>
       <section class="jobs-panel" id="jobs"></section>
     </main>
     <aside class="inspector">
@@ -67,6 +70,7 @@ const dropzone = byId("dropzone");
 const fileMeta = byId("file-meta");
 const loadError = byId("load-error");
 const issueList = byId("issues");
+const filtersNode = byId<HTMLFormElement>("filters");
 const groupsNode = byId("groups");
 const jobsNode = byId("jobs");
 const payloadNode = byId("payload");
@@ -75,6 +79,24 @@ const status = byId("status");
 const MAX_SHOWN_ISSUES = 20;
 
 let state: WorkbenchState = emptyState;
+let jobs: Job[] = [];
+let options: FilterOptions = filterOptions([]);
+let filter: JobFilter = emptyFilter;
+
+function applyFilter(): void {
+  const shown = filterJobs(jobs, filter);
+  state = loadGroups(groupJobs(shown), state);
+  showFilterCount(filtersNode, shown.length, jobs.length);
+  render();
+}
+
+function resetFilters(loaded: Job[]): void {
+  jobs = loaded;
+  options = filterOptions(loaded);
+  filter = emptyFilter;
+  renderFilterBar(filtersNode, options, filter);
+  filtersNode.toggleAttribute("hidden", loaded.length === 0);
+}
 
 function render(): void {
   renderGroupList(groupsNode, state.groups, state.selectedGroupId);
@@ -121,16 +143,15 @@ function loadFile(file: File): void {
         { encoded },
       );
       assertSingleProducer(detection);
-      const jobs = toJobs(records, detection.producer);
-      const groups = groupJobs(jobs);
+      const loaded = toJobs(records, detection.producer);
 
-      state = loadGroups(groups, state);
+      resetFilters(loaded);
+      applyFilter();
       dropzone.classList.add("is-compact");
       showLoadError(null);
       renderIssues(issues);
-      render();
       status.textContent =
-        `${plural(jobs.length, "job")} · ${plural(groups.length, "group")} · ${detection.producer} · ` +
+        `${plural(loaded.length, "job")} · ${plural(state.groups.length, "group")} · ${detection.producer} · ` +
         `${plural(issues.length, "parse issue")}`;
     })
     .catch((error: unknown) => {
@@ -139,6 +160,7 @@ function loadFile(file: File): void {
           ? error.message
           : `Could not read ${file.name}.`;
       state = emptyState;
+      resetFilters([]);
       dropzone.classList.remove("is-compact");
       showLoadError(message);
       renderIssues([]);
@@ -153,6 +175,15 @@ groupsNode.addEventListener("click", (event) => {
     state = selectGroup(state, groupId);
     render();
   }
+});
+
+filtersNode.addEventListener("input", () => {
+  filter = readFilterBar(filtersNode, options);
+  applyFilter();
+});
+
+filtersNode.addEventListener("submit", (event) => {
+  event.preventDefault();
 });
 
 jobsNode.addEventListener("click", (event) => {
