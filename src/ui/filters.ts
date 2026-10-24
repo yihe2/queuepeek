@@ -1,4 +1,4 @@
-import { emptyFilter, type FilterOptions, type JobFilter } from "../filters";
+import { emptyFilter, isFilterActive, type FilterOptions, type JobFilter } from "../filters";
 import { escapeHtml } from "./escape";
 import { plural, queueName } from "./format";
 
@@ -38,7 +38,16 @@ export function renderFilterBar(container: Element, options: FilterOptions, filt
       <span>Search</span>
       <input data-filter="text" type="search" placeholder="Payload, error, or job id" value="${escapeHtml(filter.text)}" />
     </label>
-    <span class="filter-count" data-filter-count></span>`;
+    <span class="filter-count" data-filter-count></span>
+    <button type="button" class="clear-filters" data-clear-filters ${isFilterActive(filter) ? "" : "hidden"}>Clear</button>`;
+}
+
+export function renderNoMatches(container: Element, total: number): void {
+  container.innerHTML = `
+    <div class="no-matches">
+      <p>None of the ${plural(total, "job")} match these filters.</p>
+      <button type="button" class="clear-filters" data-clear-filters>Clear filters</button>
+    </div>`;
 }
 
 function control<T extends HTMLElement>(container: Element, name: string): T | null {
@@ -64,9 +73,10 @@ export function readFilterBar(container: Element, options: FilterOptions): JobFi
   };
 }
 
-export function showFilterCount(container: Element, shown: number, total: number): void {
+export function showFilterCount(container: Element, filter: JobFilter, shown: number, total: number): void {
   const count = container.querySelector("[data-filter-count]");
   if (count) {
-    count.textContent = shown === total ? plural(total, "job") : `${shown} of ${plural(total, "job")}`;
+    count.textContent = isFilterActive(filter) ? `${shown} of ${plural(total, "job")}` : plural(total, "job");
   }
+  container.querySelector("[data-clear-filters]")?.toggleAttribute("hidden", !isFilterActive(filter));
 }

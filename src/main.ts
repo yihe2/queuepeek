@@ -16,7 +16,7 @@ import {
 import "./styles.css";
 import type { Job, ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
-import { readFilterBar, renderFilterBar, showFilterCount } from "./ui/filters";
+import { readFilterBar, renderFilterBar, renderNoMatches, showFilterCount } from "./ui/filters";
 import { plural } from "./ui/format";
 import { renderPayload } from "./ui/payload";
 import { renderGroupList } from "./ui/sidebar";
@@ -88,8 +88,14 @@ let sort: JobSort = dumpOrder;
 function applyFilter(): void {
   const shown = filterJobs(jobs, filter);
   state = loadGroups(groupJobs(shown), state);
-  showFilterCount(filtersNode, shown.length, jobs.length);
+  showFilterCount(filtersNode, filter, shown.length, jobs.length);
   render();
+}
+
+function clearFilters(): void {
+  filter = emptyFilter;
+  renderFilterBar(filtersNode, options, filter);
+  applyFilter();
 }
 
 function resetFilters(loaded: Job[]): void {
@@ -101,8 +107,14 @@ function resetFilters(loaded: Job[]): void {
 }
 
 function render(): void {
-  renderGroupList(groupsNode, state.groups, state.selectedGroupId);
-  renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort);
+  const noMatches = jobs.length > 0 && state.groups.length === 0;
+
+  renderGroupList(groupsNode, state.groups, state.selectedGroupId, noMatches ? "No groups match." : undefined);
+  if (noMatches) {
+    renderNoMatches(jobsNode, jobs.length);
+  } else {
+    renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort);
+  }
   renderPayload(payloadNode, selectedJob(state));
 }
 
@@ -186,6 +198,12 @@ filtersNode.addEventListener("input", () => {
 
 filtersNode.addEventListener("submit", (event) => {
   event.preventDefault();
+});
+
+root.addEventListener("click", (event) => {
+  if (closestData(event, "data-clear-filters")) {
+    clearFilters();
+  }
 });
 
 jobsNode.addEventListener("click", (event) => {

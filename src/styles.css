@@ -353,6 +353,32 @@ body {
   white-space: nowrap;
 }
 
+.clear-filters {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.clear-filters:hover {
+  border-color: var(--accent);
+}
+
+.no-matches {
+  max-width: 36rem;
+  padding: 1.5rem 1.1rem;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.no-matches p {
+  margin: 0 0 0.75rem;
+}
+
 .jobs-panel {
   margin-top: 1.25rem;
 }

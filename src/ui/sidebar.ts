@@ -21,9 +21,14 @@ function renderGroup(group: ErrorGroup, selected: boolean): string {
     </li>`;
 }
 
-export function renderGroupList(container: Element, groups: ErrorGroup[], selectedId: string | null): void {
+export function renderGroupList(
+  container: Element,
+  groups: ErrorGroup[],
+  selectedId: string | null,
+  emptyMessage = "No dump loaded.",
+): void {
   if (groups.length === 0) {
-    container.innerHTML = `<p class="empty">No dump loaded.</p>`;
+    container.innerHTML = `<p class="empty">${escapeHtml(emptyMessage)}</p>`;
     return;
   }
 
