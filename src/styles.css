@@ -414,6 +414,20 @@ body {
   font-weight: 600;
 }
 
+.jobs .sort {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.jobs .sort:hover,
+.jobs .sort.is-active {
+  color: var(--text);
+}
+
 .jobs tbody tr {
   cursor: pointer;
 }

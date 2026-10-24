@@ -1,4 +1,5 @@
 import { groupLabel, type ErrorGroup } from "../grouping";
+import { sortJobs, type JobSort, type SortKey } from "../sorting";
 import type { Job } from "../types";
 import { escapeHtml } from "./escape";
 import { payloadPreview, plural, queueName, shortTime } from "./format";
@@ -14,7 +15,23 @@ function renderRow(job: Job, selected: boolean): string {
     </tr>`;
 }
 
-export function renderJobTable(container: Element, group: ErrorGroup | null, selectedJobId: string | null): void {
+function sortHeader(label: string, key: SortKey, sort: JobSort, className = ""): string {
+  const active = sort.key === key;
+  const ariaSort = active ? (sort.direction === "asc" ? "ascending" : "descending") : "none";
+  const arrow = active ? (sort.direction === "asc" ? " ▲" : " ▼") : "";
+
+  return `
+    <th class="${className}" aria-sort="${ariaSort}">
+      <button type="button" class="sort${active ? " is-active" : ""}" data-sort="${key}">${label}${arrow}</button>
+    </th>`;
+}
+
+export function renderJobTable(
+  container: Element,
+  group: ErrorGroup | null,
+  selectedJobId: string | null,
+  sort: JobSort,
+): void {
   if (!group) {
     container.innerHTML = "";
     return;
@@ -31,9 +48,17 @@ export function renderJobTable(container: Element, group: ErrorGroup | null, sel
     <div class="table-wrap">
       <table class="jobs">
         <thead>
-          <tr><th>Job</th><th>Queue</th><th class="num">Attempts</th><th>Failed (UTC)</th><th>Payload</th></tr>
+          <tr>
+            <th>Job</th>
+            ${sortHeader("Queue", "queue", sort)}
+            ${sortHeader("Attempts", "attempts", sort, "num")}
+            ${sortHeader("Failed (UTC)", "failedAt", sort)}
+            <th>Payload</th>
+          </tr>
         </thead>
-        <tbody>${group.jobs.map((job) => renderRow(job, job.id === selectedJobId)).join("")}</tbody>
+        <tbody>${sortJobs(group.jobs, sort)
+          .map((job) => renderRow(job, job.id === selectedJobId))
+          .join("")}</tbody>
       </table>
     </div>`;
 }

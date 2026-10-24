@@ -2,6 +2,7 @@ import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
+import { dumpOrder, nextSort, type JobSort, type SortKey } from "./sorting";
 import { DumpLoadError, parseDump } from "./load";
 import {
   emptyState,
@@ -82,6 +83,7 @@ let state: WorkbenchState = emptyState;
 let jobs: Job[] = [];
 let options: FilterOptions = filterOptions([]);
 let filter: JobFilter = emptyFilter;
+let sort: JobSort = dumpOrder;
 
 function applyFilter(): void {
   const shown = filterJobs(jobs, filter);
@@ -100,7 +102,7 @@ function resetFilters(loaded: Job[]): void {
 
 function render(): void {
   renderGroupList(groupsNode, state.groups, state.selectedGroupId);
-  renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId);
+  renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort);
   renderPayload(payloadNode, selectedJob(state));
 }
 
@@ -187,6 +189,13 @@ filtersNode.addEventListener("submit", (event) => {
 });
 
 jobsNode.addEventListener("click", (event) => {
+  const sortKey = closestData(event, "data-sort")?.dataset.sort;
+  if (sortKey) {
+    sort = nextSort(sort, sortKey as SortKey);
+    render();
+    return;
+  }
+
   const jobId = closestData(event, "data-job-id")?.dataset.jobId;
   if (jobId !== undefined) {
     state = selectJob(state, jobId);
