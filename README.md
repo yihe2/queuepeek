@@ -66,4 +66,4 @@ Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](
 
 ## Status
 
-Loaders, the SQS, Sidekiq, and Redis adapters, error grouping, and the three-pane workbench (groups, job table, payload) are in. Filters, sorting, payload editing, poison rules, and export are not.
+Loaders, the SQS, Sidekiq, and Redis adapters, error grouping, and the three-pane workbench (groups, job table, payload) are in, with filters by queue, class, attempts, and text, and sortable columns. Payload editing, poison rules, and export are not.

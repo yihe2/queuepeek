@@ -5,7 +5,7 @@ The workbench is one page with three panes under the top bar and a status line a
 | Pane | Element | Shows |
 | --- | --- | --- |
 | Groups | `#groups` | error groups, largest first, with count, masked message, and busiest queues |
-| Stage | `#dropzone`, `#jobs` | drop zone, load errors, parse issues, and the selected group's job table |
+| Stage | `#dropzone`, `#filters`, `#jobs` | drop zone, load errors, parse issues, the filter bar, and the selected group's job table |
 | Payload | `#payload` | the selected job's fields and its payload |
 
 Each pane scrolls on its own, so a long job table does not push the payload out of view.
@@ -23,7 +23,22 @@ After a successful load the drop zone shrinks to a single line. It still accepts
 
 Selection lives in `src/state.ts` as a plain object: the groups, the selected group id, and the selected job id. Every change goes through a function that returns a new state, and `render()` redraws the three panes from it.
 
-Reloading a dump keeps the selected group if a group with the same id exists in the new dump. Group ids depend only on error class and masked message, so this holds across reorderings and re-exports. Otherwise the largest group is selected.
+Reloading a dump or changing a filter keeps the selected group if a group with the same id still exists, and keeps the selected job if it is still in that group. Group ids depend only on error class and masked message, so this holds across reorderings, re-exports, and filters. Otherwise the largest group and its sample job are selected.
+
+## Filters
+
+The filter bar appears once a dump is loaded. Filters narrow the jobs **before** grouping, so group counts, samples, and order in the sidebar always describe what is visible.
+
+| Filter | Matches |
+| --- | --- |
+| Queue | one queue, including `(no queue)` |
+| Class | one error class (trimmed, as grouping reads it), including `(no error class)` |
+| Min attempts | jobs with at least this many attempts |
+| Search | case-insensitive text in the job id, error class, error message, or payload |
+
+All active filters must match. The choices in the queue and class lists come from the whole dump, so picking one never removes the others. The count at the right shows how many jobs pass, and **Clear** resets everything. If nothing passes, the table is replaced by a message with a **Clear filters** button.
+
+Filters live in memory only. They reset when a new dump is loaded and are not written to the URL, since queue and class names from a production dump should not end up in browser history.
 
 ## Job Table
 
@@ -35,7 +50,7 @@ Reloading a dump keeps the selected group if a group with the same id exists in 
 | Failed (UTC) | `job.failedAt` to the minute; unreadable values are shown as-is, missing ones as `—` |
 | Payload | the payload text on one line, cut at 80 characters |
 
-Rows are in dump order. Sorting and filtering are not in yet.
+Rows start in dump order. Clicking **Queue**, **Attempts**, or **Failed (UTC)** sorts ascending, a second click sorts descending, and a third goes back to dump order. Ties keep dump order. Jobs without a readable failure time always sort last. The sort stays in place when you switch groups.
 
 ## Payload Pane
 
