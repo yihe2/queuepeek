@@ -22,10 +22,14 @@ function focusGroup(groups: ErrorGroup[], group: ErrorGroup | undefined): Workbe
 
 /**
  * Replaces the loaded groups. Group ids are stable, so reloading a newer dump of the same
- * queue keeps the operator on the group they were looking at when it still exists.
+ * queue, or changing a filter, keeps the operator on the group they were looking at when it
+ * still exists, and on the same job when that job is still in it.
  */
 export function loadGroups(groups: ErrorGroup[], previous: WorkbenchState = emptyState): WorkbenchState {
   const kept = groups.find((group) => group.id === previous.selectedGroupId);
+  if (kept?.jobs.some((job) => job.id === previous.selectedJobId)) {
+    return { groups, selectedGroupId: kept.id, selectedJobId: previous.selectedJobId };
+  }
   return focusGroup(groups, kept ?? groups[0]);
 }
 

@@ -30,6 +30,20 @@ describe("loadGroups", () => {
     expect(selectedGroup(reloaded)?.errorClass).toBe("CardDeclined");
   });
 
+  it("keeps the selected job when it is still in the kept group", () => {
+    const first = selectJob(loadGroups(groupJobs(timeouts)), "t-3");
+    const narrowed = loadGroups(groupJobs(timeouts.filter((job) => job.id !== "t-1")), first);
+
+    expect(narrowed.selectedJobId).toBe("t-3");
+  });
+
+  it("moves to the group's sample when the selected job was filtered out", () => {
+    const first = selectJob(loadGroups(groupJobs(timeouts)), "t-1");
+    const narrowed = loadGroups(groupJobs(timeouts.filter((job) => job.id !== "t-1")), first);
+
+    expect(narrowed.selectedJobId).toBe("t-2");
+  });
+
   it("falls back to the largest group when the previous one is gone", () => {
     const first = selectGroup(loadGroups(groupJobs([...timeouts, ...declines])), groupJobs(declines)[0].id);
     const reloaded = loadGroups(groupJobs(timeouts), first);
