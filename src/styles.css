@@ -109,6 +109,71 @@ body {
   overflow-wrap: anywhere;
 }
 
+textarea.payload {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  color: var(--text);
+}
+
+textarea.payload:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+textarea.payload.is-invalid {
+  border-color: #b5474f;
+}
+
+.editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.7rem;
+  margin-bottom: 0.4rem;
+}
+
+.editor-state {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.editor-state.is-edited {
+  color: var(--accent);
+}
+
+.revert {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.revert:hover {
+  border-color: var(--accent);
+}
+
+.payload-error {
+  margin: 0.5rem 0 0;
+  color: #f0b9bd;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.jobs .tag {
+  margin-left: 0.35rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  font-size: 0.68rem;
+}
+
 .sidebar {
   border-right: 1px solid var(--line);
   overflow-y: auto;

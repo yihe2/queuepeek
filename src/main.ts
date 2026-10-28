@@ -1,5 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
+import { editPayload, isEdited, noEdits, revertPayload, type Edits } from "./edits";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import { dumpOrder, nextSort, type JobSort, type SortKey } from "./sorting";
@@ -18,9 +19,9 @@ import type { Job, ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
 import { readFilterBar, renderFilterBar, renderNoMatches, showFilterCount } from "./ui/filters";
 import { plural } from "./ui/format";
-import { renderPayload } from "./ui/payload";
+import { prettyPayload, renderPayload, showPayloadCheck } from "./ui/payload";
 import { renderGroupList } from "./ui/sidebar";
-import { renderJobTable } from "./ui/table";
+import { markEdited, renderJobTable } from "./ui/table";
 
 const root = document.querySelector("#app");
 
@@ -84,6 +85,7 @@ let jobs: Job[] = [];
 let options: FilterOptions = filterOptions([]);
 let filter: JobFilter = emptyFilter;
 let sort: JobSort = dumpOrder;
+let edits: Edits = noEdits;
 
 function applyFilter(): void {
   const shown = filterJobs(jobs, filter);
@@ -113,9 +115,9 @@ function render(): void {
   if (noMatches) {
     renderNoMatches(jobsNode, jobs.length);
   } else {
-    renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort);
+    renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort, edits);
   }
-  renderPayload(payloadNode, selectedJob(state));
+  renderPayload(payloadNode, selectedJob(state), edits);
 }
 
 function locate(issue: ParseIssue): string {
@@ -159,6 +161,7 @@ function loadFile(file: File): void {
       assertSingleProducer(detection);
       const loaded = toJobs(records, detection.producer);
 
+      edits = noEdits;
       resetFilters(loaded);
       applyFilter();
       dropzone.classList.add("is-compact");
@@ -174,6 +177,7 @@ function loadFile(file: File): void {
           ? error.message
           : `Could not read ${file.name}.`;
       state = emptyState;
+      edits = noEdits;
       resetFilters([]);
       dropzone.classList.remove("is-compact");
       showLoadError(message);
@@ -217,6 +221,24 @@ jobsNode.addEventListener("click", (event) => {
   const jobId = closestData(event, "data-job-id")?.dataset.jobId;
   if (jobId !== undefined) {
     state = selectJob(state, jobId);
+    render();
+  }
+});
+
+payloadNode.addEventListener("focusout", (event) => {
+  const job = selectedJob(state);
+  if (!job || !(event.target instanceof HTMLTextAreaElement) || !event.target.hasAttribute("data-payload-editor")) {
+    return;
+  }
+  edits = editPayload(edits, job.id, event.target.value, prettyPayload(job));
+  showPayloadCheck(payloadNode, job, edits);
+  markEdited(jobsNode, job.id, isEdited(edits, job.id));
+});
+
+payloadNode.addEventListener("click", (event) => {
+  const job = selectedJob(state);
+  if (job && closestData(event, "data-revert-payload")) {
+    edits = revertPayload(edits, job.id);
     render();
   }
 });
