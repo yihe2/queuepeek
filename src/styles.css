@@ -165,6 +165,26 @@ textarea.payload.is-invalid {
   overflow-wrap: anywhere;
 }
 
+.jobs .pick {
+  width: 1%;
+  text-align: center;
+}
+
+.jobs input[type="checkbox"],
+.include input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.include {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .jobs .tag {
   margin-left: 0.35rem;
   padding: 0 0.35rem;

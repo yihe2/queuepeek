@@ -1,6 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
-import { editPayload, isEdited, noEdits, revertPayload, type Edits } from "./edits";
+import { editPayload, isEdited, noEdits, revertPayload, setIncluded, type Edits } from "./edits";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import { dumpOrder, nextSort, type JobSort, type SortKey } from "./sorting";
@@ -146,6 +146,20 @@ function closestData(event: Event, attribute: string): HTMLElement | null {
   return event.target instanceof Element ? event.target.closest<HTMLElement>(`[${attribute}]`) : null;
 }
 
+/**
+ * Handled on click rather than change: by the time change fires, a row click may already
+ * have redrawn the table and detached the checkbox.
+ */
+function toggleInclude(event: Event): boolean {
+  const box = event.target;
+  if (!(box instanceof HTMLInputElement) || box.dataset.includeJob === undefined) {
+    return false;
+  }
+  edits = setIncluded(edits, [box.dataset.includeJob], box.checked);
+  render();
+  return true;
+}
+
 function loadFile(file: File): void {
   fileMeta.textContent = `${file.name} · ${file.size} bytes`;
 
@@ -211,6 +225,10 @@ root.addEventListener("click", (event) => {
 });
 
 jobsNode.addEventListener("click", (event) => {
+  if (toggleInclude(event)) {
+    return;
+  }
+
   const sortKey = closestData(event, "data-sort")?.dataset.sort;
   if (sortKey) {
     sort = nextSort(sort, sortKey as SortKey);
@@ -236,6 +254,10 @@ payloadNode.addEventListener("focusout", (event) => {
 });
 
 payloadNode.addEventListener("click", (event) => {
+  if (toggleInclude(event)) {
+    return;
+  }
+
   const job = selectedJob(state);
   if (job && closestData(event, "data-revert-payload")) {
     edits = revertPayload(edits, job.id);

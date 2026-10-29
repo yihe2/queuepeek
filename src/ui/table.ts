@@ -1,4 +1,4 @@
-import { isEdited, type Edits } from "../edits";
+import { isEdited, isIncluded, type Edits } from "../edits";
 import { groupLabel, type ErrorGroup } from "../grouping";
 import { sortJobs, type JobSort, type SortKey } from "../sorting";
 import type { Job } from "../types";
@@ -11,8 +11,12 @@ function renderRow(job: Job, selected: boolean, edits: Edits): string {
   const edited = isEdited(edits, job.id);
   const classes = [selected ? "is-selected" : "", edited ? "is-edited" : ""].filter(Boolean).join(" ");
 
+  const id = escapeHtml(job.id);
+  const checked = isIncluded(edits, job.id) ? " checked" : "";
+
   return `
-    <tr class="${classes}" data-job-id="${escapeHtml(job.id)}">
+    <tr class="${classes}" data-job-id="${id}">
+      <td class="pick"><input type="checkbox" data-include-job="${id}" aria-label="Include ${id} in retry batch"${checked} /></td>
       <td class="job-id">${escapeHtml(job.id)} ${edited ? EDITED_TAG : ""}</td>
       <td>${escapeHtml(queueName(job.queue))}</td>
       <td class="num">${job.attempts}</td>
@@ -79,6 +83,7 @@ export function renderJobTable(
       <table class="jobs">
         <thead>
           <tr>
+            <th class="pick" title="Include in retry batch">Retry</th>
             <th>Job</th>
             ${sortHeader("Queue", "queue", sort)}
             ${sortHeader("Attempts", "attempts", sort, "num")}

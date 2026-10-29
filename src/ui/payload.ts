@@ -1,4 +1,4 @@
-import { checkPayload, isEdited, payloadText, type Edits } from "../edits";
+import { checkPayload, isEdited, isIncluded, payloadText, type Edits } from "../edits";
 import type { Job } from "../types";
 import { escapeHtml } from "./escape";
 import { queueName, shortTime } from "./format";
@@ -45,6 +45,10 @@ export function renderPayload(container: Element, job: Job | null, edits: Edits)
     <dl class="job-fields">
       ${fields.map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
     </dl>
+    <label class="include">
+      <input type="checkbox" data-include-job="${escapeHtml(job.id)}"${isIncluded(edits, job.id) ? " checked" : ""} />
+      Include in retry batch
+    </label>
     <div class="editor-head">
       <span class="editor-state" data-editor-state></span>
       <button type="button" class="revert" data-revert-payload hidden>Revert</button>
