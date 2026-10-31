@@ -1,6 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
-import { editPayload, isEdited, noEdits, revertPayload, setIncluded, type Edits } from "./edits";
+import { editPayload, isEdited, noEdits, retrySummary, revertPayload, setIncluded, type Edits } from "./edits";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import { dumpOrder, nextSort, type JobSort, type SortKey } from "./sorting";
@@ -33,6 +33,7 @@ root.innerHTML = `
   <header class="topbar">
     <h1>Queuepeek</h1>
     <p>Dead-letter workbench</p>
+    <p class="retry-summary" id="retry-summary"></p>
   </header>
   <div class="workspace">
     <aside class="sidebar">
@@ -77,6 +78,7 @@ const groupsNode = byId("groups");
 const jobsNode = byId("jobs");
 const payloadNode = byId("payload");
 const status = byId("status");
+const retryNode = byId("retry-summary");
 
 const MAX_SHOWN_ISSUES = 20;
 
@@ -118,6 +120,17 @@ function render(): void {
     renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort, edits);
   }
   renderPayload(payloadNode, selectedJob(state), edits);
+  renderRetrySummary();
+}
+
+function renderRetrySummary(): void {
+  const { included, edited, invalid } = retrySummary(jobs, edits);
+  const parts = [`${included} in retry batch`, `${edited} edited`];
+  if (invalid > 0) {
+    parts.push(`${invalid} invalid`);
+  }
+  retryNode.textContent = jobs.length === 0 ? "" : parts.join(" · ");
+  retryNode.classList.toggle("has-invalid", invalid > 0);
 }
 
 function locate(issue: ParseIssue): string {
@@ -229,6 +242,14 @@ jobsNode.addEventListener("click", (event) => {
     return;
   }
 
+  const bulk = closestData(event, "data-include-group")?.dataset.includeGroup;
+  const group = selectedGroup(state);
+  if (bulk && group) {
+    edits = setIncluded(edits, group.jobs.map((job) => job.id), bulk === "on");
+    render();
+    return;
+  }
+
   const sortKey = closestData(event, "data-sort")?.dataset.sort;
   if (sortKey) {
     sort = nextSort(sort, sortKey as SortKey);
@@ -251,6 +272,7 @@ payloadNode.addEventListener("focusout", (event) => {
   edits = editPayload(edits, job.id, event.target.value, prettyPayload(job));
   showPayloadCheck(payloadNode, job, edits);
   markEdited(jobsNode, job.id, isEdited(edits, job.id));
+  renderRetrySummary();
 });
 
 payloadNode.addEventListener("click", (event) => {

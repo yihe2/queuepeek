@@ -4,10 +4,12 @@ import {
   checkPayload,
   editPayload,
   getEdit,
+  inclusion,
   isEdited,
   isIncluded,
   noEdits,
   payloadText,
+  retrySummary,
   revertPayload,
   setIncluded,
 } from "../src/edits";
@@ -77,5 +79,30 @@ describe("setIncluded", () => {
 
     expect(edits.size).toBe(0);
     expect(getEdit(edits, "j-1")).toEqual({ text: null, included: false });
+  });
+});
+
+describe("inclusion", () => {
+  const jobs = [makeJob({ id: "g-1" }), makeJob({ id: "g-2" })];
+
+  it("reports none, some, or all of a group", () => {
+    expect(inclusion(jobs, noEdits)).toBe("none");
+    expect(inclusion(jobs, setIncluded(noEdits, ["g-1"], true))).toBe("some");
+    expect(inclusion(jobs, setIncluded(noEdits, ["g-1", "g-2"], true))).toBe("all");
+  });
+});
+
+describe("retrySummary", () => {
+  it("counts included, edited, and invalid jobs", () => {
+    const jobs = [
+      makeJob({ id: "r-1", payload: { a: 1 } }),
+      makeJob({ id: "r-2", payload: { a: 2 } }),
+      makeJob({ id: "r-3", payload: { a: 3 } }),
+    ];
+    let edits = setIncluded(noEdits, ["r-1", "r-2"], true);
+    edits = editPayload(edits, "r-2", '{"a": 20}', "{}");
+    edits = editPayload(edits, "r-3", '{"a": ', "{}");
+
+    expect(retrySummary(jobs, edits)).toEqual({ included: 2, edited: 2, invalid: 1 });
   });
 });

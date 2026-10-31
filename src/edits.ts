@@ -71,3 +71,38 @@ export function isEdited(edits: Edits, jobId: string): boolean {
 export function isIncluded(edits: Edits, jobId: string): boolean {
   return getEdit(edits, jobId).included;
 }
+
+export type Inclusion = "none" | "some" | "all";
+
+export function inclusion(jobs: Job[], edits: Edits): Inclusion {
+  const count = jobs.filter((job) => isIncluded(edits, job.id)).length;
+  if (count === 0) {
+    return "none";
+  }
+  return count === jobs.length ? "all" : "some";
+}
+
+export type RetrySummary = {
+  included: number;
+  edited: number;
+  /** Edited payloads that no longer parse. Export will refuse a batch containing any. */
+  invalid: number;
+};
+
+export function retrySummary(jobs: Job[], edits: Edits): RetrySummary {
+  const summary: RetrySummary = { included: 0, edited: 0, invalid: 0 };
+
+  for (const job of jobs) {
+    const edit = getEdit(edits, job.id);
+    if (edit.included) {
+      summary.included += 1;
+    }
+    if (edit.text !== null) {
+      summary.edited += 1;
+      if (!checkPayload(job, edit.text).ok) {
+        summary.invalid += 1;
+      }
+    }
+  }
+  return summary;
+}

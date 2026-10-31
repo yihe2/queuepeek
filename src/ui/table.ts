@@ -1,4 +1,4 @@
-import { isEdited, isIncluded, type Edits } from "../edits";
+import { inclusion, isEdited, isIncluded, type Edits } from "../edits";
 import { groupLabel, type ErrorGroup } from "../grouping";
 import { sortJobs, type JobSort, type SortKey } from "../sorting";
 import type { Job } from "../types";
@@ -72,11 +72,14 @@ export function renderJobTable(
   }
 
   const message = group.message === "" ? "" : `<p class="jobs-message">${escapeHtml(group.message)}</p>`;
+  const allIncluded = inclusion(group.jobs, edits) === "all";
+  const bulkLabel = allIncluded ? "Exclude all" : `Include all ${group.count}`;
 
   container.innerHTML = `
     <header class="jobs-head">
       <h2>${escapeHtml(groupLabel(group))}</h2>
       <span>${plural(group.count, "job")} · max ${group.maxAttempts} attempts</span>
+      <button type="button" class="bulk-include" data-include-group="${allIncluded ? "off" : "on"}">${bulkLabel}</button>
     </header>
     ${message}
     <div class="table-wrap">
