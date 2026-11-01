@@ -13,6 +13,7 @@ import {
   revertPayload,
   setIncluded,
 } from "../src/edits";
+import { prettyPayload } from "../src/ui/payload";
 import { makeJob } from "./job-factory";
 
 const original = '{\n  "orderId": 1001\n}';
@@ -79,6 +80,57 @@ describe("setIncluded", () => {
 
     expect(edits.size).toBe(0);
     expect(getEdit(edits, "j-1")).toEqual({ text: null, included: false });
+  });
+});
+
+describe("edit and revert round trips", () => {
+  const job = makeJob({ id: "rt-1", payload: { orderId: 1001 }, payloadText: '{"orderId":1001}' });
+  const pretty = prettyPayload(job);
+
+  it("returns to the exact original text after several edits and a revert", () => {
+    let edits = editPayload(noEdits, job.id, '{"orderId": 1002}', pretty);
+    edits = editPayload(edits, job.id, '{"orderId": 1003, "note": "manual"}', pretty);
+    edits = revertPayload(edits, job.id);
+
+    expect(payloadText(edits, job.id, pretty)).toBe(pretty);
+    expect(edits.size).toBe(0);
+  });
+
+  it("clears the edit when the text is typed back to the original", () => {
+    let edits = editPayload(noEdits, job.id, '{"orderId": 1002}', pretty);
+    edits = editPayload(edits, job.id, pretty, pretty);
+
+    expect(isEdited(edits, job.id)).toBe(false);
+  });
+
+  it("keeps the retry flag through an edit and a revert", () => {
+    let edits = setIncluded(noEdits, [job.id], true);
+    edits = editPayload(edits, job.id, "{}", pretty);
+    edits = revertPayload(edits, job.id);
+
+    expect(isIncluded(edits, job.id)).toBe(true);
+  });
+
+  it("keeps the edited text when the job is taken out of the batch", () => {
+    let edits = editPayload(noEdits, job.id, "{}", pretty);
+    edits = setIncluded(setIncluded(edits, [job.id], true), [job.id], false);
+
+    expect(payloadText(edits, job.id, pretty)).toBe("{}");
+  });
+
+  it("never touches the parsed job", () => {
+    revertPayload(editPayload(noEdits, job.id, '{"orderId": 9}', pretty), job.id);
+
+    expect(job.payload).toEqual({ orderId: 1001 });
+    expect(job.payloadText).toBe('{"orderId":1001}');
+  });
+
+  it("can revert an invalid edit back to a valid payload", () => {
+    const broken = editPayload(noEdits, job.id, '{"orderId": ', pretty);
+    const reverted = revertPayload(broken, job.id);
+
+    expect(checkPayload(job, payloadText(broken, job.id, pretty)).ok).toBe(false);
+    expect(checkPayload(job, payloadText(reverted, job.id, pretty)).ok).toBe(true);
   });
 });
 
