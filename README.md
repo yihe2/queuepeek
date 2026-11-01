@@ -66,4 +66,4 @@ Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](
 
 ## Status
 
-Loaders, the SQS, Sidekiq, and Redis adapters, error grouping, and the three-pane workbench (groups, job table, payload) are in, with filters by queue, class, attempts, and text, and sortable columns. Payload editing, poison rules, and export are not.
+The core workbench is feature-frozen: load a dump (SQS, Sidekiq, Redis, or generic JSON), group failures by error, filter and sort jobs, edit payloads with revert, and pick jobs for a retry batch. Poison rules, export, and saved sessions are next.

@@ -6,7 +6,7 @@ The workbench is one page with three panes under the top bar and a status line a
 | --- | --- | --- |
 | Groups | `#groups` | error groups, largest first, with count, masked message, and busiest queues |
 | Stage | `#dropzone`, `#filters`, `#jobs` | drop zone, load errors, parse issues, the filter bar, and the selected group's job table |
-| Payload | `#payload` | the selected job's fields and its payload |
+| Payload | `#payload` | the selected job's fields, its retry checkbox, and the payload editor |
 
 Each pane scrolls on its own, so a long job table does not push the payload out of view.
 
@@ -55,6 +55,22 @@ Rows start in dump order. Clicking **Queue**, **Attempts**, or **Failed (UTC)** 
 ## Payload Pane
 
 Structured payloads are indented JSON. Payloads that were plain strings, or that could not be parsed, are shown as the original text.
+
+The payload is editable. Changes are saved when the editor loses focus, and checked at the same time:
+
+- A payload that arrived as JSON must stay valid JSON. Broken JSON is kept, so you can finish fixing it, but it is outlined in red with the parser's message underneath and counted as invalid.
+- A plain-text payload accepts any text.
+- Typing the payload back to exactly the original clears the edit.
+
+**Revert** throws the edit away and shows the original again. Edits are kept beside the parsed jobs, never written into them, so revert always gets back the bytes that were in the dump. Edited rows carry an `edited` tag in the table.
+
+## Retry Batch
+
+Each job has an **Include in retry batch** checkbox, both in the table's first column and above the editor. **Include all** in the table header adds every job currently shown in the group; with a filter active that means only the jobs that pass it. Once every shown job is in, the button becomes **Exclude all**.
+
+The top bar counts jobs in the batch, edited jobs, and edited payloads that are invalid. Taking a job out of the batch keeps its edit, and editing or reverting keeps its checkbox.
+
+Edits and the batch live in memory and are cleared when a new dump is loaded. Writing the batch out is the export step and comes later.
 
 ## Load Errors
 

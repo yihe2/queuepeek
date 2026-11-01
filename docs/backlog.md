@@ -11,16 +11,24 @@ This backlog captures the first product questions and candidate tasks for Queuep
 
 ## MVP Backlog
 
-- JSON / JSONL loader
-- SQS DLQ adapter
-- Sidekiq dead-set adapter
-- generic job adapter
-- group by error
-- payload inspect / edit
-- poison list
-- retry and leftover exports
-- sample dumps
-- parser tests
+Workbench frozen; the remaining items belong to the poison and export phase.
+
+- [x] JSON / JSONL loader
+- [x] SQS DLQ adapter
+- [x] Sidekiq dead-set adapter
+- [x] generic job adapter
+- [x] group by error
+- [x] payload inspect / edit
+- [ ] poison list
+- [ ] retry and leftover exports
+- [x] sample dumps
+- [x] parser tests
+
+## Decided During The MVP
+
+- format detection is strict: a file with records from more than one producer is refused
+- the payload editor is a plain textarea that checks JSON on blur, not a JSON IDE
+- edits never modify parsed jobs; the original payload is always one click away
 
 ## Nice-To-Have Backlog
 
