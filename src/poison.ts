@@ -1,3 +1,4 @@
+import { normalizeMessage } from "./grouping/messages";
 import type { Job } from "./types";
 
 /**
@@ -8,16 +9,26 @@ import type { Job } from "./types";
 export type PoisonRules = {
   /** A job with at least this many attempts is poison. 0 turns the rule off. */
   maxAttempts: number;
+  /** The same payload failing with the same error at least this many times is poison. 0 turns the rule off. */
+  repeatCount: number;
 };
 
 export const defaultRules: PoisonRules = {
   maxAttempts: 10,
+  repeatCount: 3,
 };
 
-export type PoisonReason = { rule: "attempts"; attempts: number; limit: number };
+export type PoisonReason =
+  | { rule: "attempts"; attempts: number; limit: number }
+  | { rule: "repeat"; count: number };
 
 /** Reasons per job id. Jobs no rule fired for are absent. */
 export type PoisonReport = ReadonlyMap<string, PoisonReason[]>;
+
+/** Same error group key as grouping, plus the payload, so "the same message failing the same way". */
+function repeatKey(job: Job): string {
+  return `${job.errorClass.trim()}\u0000${normalizeMessage(job.errorMessage)}\u0000${job.payloadText.trim()}`;
+}
 
 export function findPoison(jobs: Job[], rules: PoisonRules = defaultRules): PoisonReport {
   const report = new Map<string, PoisonReason[]>();
@@ -33,6 +44,20 @@ export function findPoison(jobs: Job[], rules: PoisonRules = defaultRules): Pois
     }
   }
 
+  // A single copy can never repeat, so a limit below 2 would flag every job.
+  if (rules.repeatCount >= 2) {
+    const copies = new Map<string, Job[]>();
+    for (const job of jobs) {
+      const key = repeatKey(job);
+      copies.set(key, [...(copies.get(key) ?? []), job]);
+    }
+    for (const same of copies.values()) {
+      if (same.length >= rules.repeatCount) {
+        same.forEach((job) => add(job, { rule: "repeat", count: same.length }));
+      }
+    }
+  }
+
   return report;
 }
 
@@ -41,5 +66,10 @@ export function poisonReasons(report: PoisonReport, jobId: string): PoisonReason
 }
 
 export function describeReason(reason: PoisonReason): string {
-  return `${reason.attempts} attempts (limit ${reason.limit})`;
+  switch (reason.rule) {
+    case "attempts":
+      return `${reason.attempts} attempts (limit ${reason.limit})`;
+    case "repeat":
+      return `same payload failed the same way ${reason.count} times`;
+  }
 }
