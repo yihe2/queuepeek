@@ -65,6 +65,47 @@ export function poisonReasons(report: PoisonReport, jobId: string): PoisonReason
   return report.get(jobId) ?? [];
 }
 
+/** `poison` marks a job the rules missed; `clear` overrules the rules for a job that is fine. */
+export type PoisonMark = "poison" | "clear";
+
+/** Keyed by job id. Jobs left to the rules are absent. */
+export type PoisonOverrides = ReadonlyMap<string, PoisonMark>;
+
+export const noOverrides: PoisonOverrides = new Map();
+
+/** `null` hands the job back to the rules. */
+export function markPoison(overrides: PoisonOverrides, jobId: string, mark: PoisonMark | null): PoisonOverrides {
+  const next = new Map(overrides);
+  if (mark === null) {
+    next.delete(jobId);
+  } else {
+    next.set(jobId, mark);
+  }
+  return next;
+}
+
+export function isPoison(report: PoisonReport, overrides: PoisonOverrides, jobId: string): boolean {
+  const mark = overrides.get(jobId);
+  if (mark !== undefined) {
+    return mark === "poison";
+  }
+  return poisonReasons(report, jobId).length > 0;
+}
+
+/** Flips the job's effective state, dropping the override when it would only repeat what the rules say. */
+export function togglePoison(report: PoisonReport, overrides: PoisonOverrides, jobId: string): PoisonOverrides {
+  const byRules = poisonReasons(report, jobId).length > 0;
+  const wanted = !isPoison(report, overrides, jobId);
+  if (wanted === byRules) {
+    return markPoison(overrides, jobId, null);
+  }
+  return markPoison(overrides, jobId, wanted ? "poison" : "clear");
+}
+
+export function poisonJobs(jobs: Job[], report: PoisonReport, overrides: PoisonOverrides): Job[] {
+  return jobs.filter((job) => isPoison(report, overrides, job.id));
+}
+
 export function describeReason(reason: PoisonReason): string {
   switch (reason.rule) {
     case "attempts":

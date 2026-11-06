@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultRules, describeReason, findPoison, poisonReasons } from "../src/poison";
+import {
+  defaultRules,
+  describeReason,
+  findPoison,
+  isPoison,
+  markPoison,
+  noOverrides,
+  poisonJobs,
+  poisonReasons,
+  togglePoison,
+} from "../src/poison";
 import { makeJob } from "./job-factory";
 
 describe("attempt threshold", () => {
@@ -85,5 +95,48 @@ describe("identical payload rule", () => {
 
   it("describes the reason", () => {
     expect(describeReason({ rule: "repeat", count: 4 })).toBe("same payload failed the same way 4 times");
+  });
+});
+
+describe("manual overrides", () => {
+  const jobs = [
+    makeJob({ id: "worn", attempts: 14, payloadText: '{"n":1}' }),
+    makeJob({ id: "fresh", attempts: 1, payloadText: '{"n":2}' }),
+  ];
+  const report = findPoison(jobs);
+
+  it("follows the rules when there is no override", () => {
+    expect(isPoison(report, noOverrides, "worn")).toBe(true);
+    expect(isPoison(report, noOverrides, "fresh")).toBe(false);
+  });
+
+  it("lets an operator clear a flagged job or flag a clean one", () => {
+    const overrides = markPoison(markPoison(noOverrides, "worn", "clear"), "fresh", "poison");
+
+    expect(isPoison(report, overrides, "worn")).toBe(false);
+    expect(isPoison(report, overrides, "fresh")).toBe(true);
+    expect(poisonJobs(jobs, report, overrides).map((job) => job.id)).toEqual(["fresh"]);
+  });
+
+  it("hands a job back to the rules", () => {
+    const overrides = markPoison(markPoison(noOverrides, "worn", "clear"), "worn", null);
+
+    expect(overrides.size).toBe(0);
+    expect(isPoison(report, overrides, "worn")).toBe(true);
+  });
+
+  it("toggles without leaving overrides that agree with the rules", () => {
+    const cleared = togglePoison(report, noOverrides, "worn");
+    const restored = togglePoison(report, cleared, "worn");
+
+    expect(cleared.get("worn")).toBe("clear");
+    expect(restored.size).toBe(0);
+    expect(togglePoison(report, noOverrides, "fresh").get("fresh")).toBe("poison");
+  });
+
+  it("does not modify the previous overrides", () => {
+    markPoison(noOverrides, "fresh", "poison");
+
+    expect(noOverrides.size).toBe(0);
   });
 });
