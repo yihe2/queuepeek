@@ -3,6 +3,16 @@ import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect
 import { editPayload, isEdited, noEdits, retrySummary, revertPayload, setIncluded, type Edits } from "./edits";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
+import {
+  describeReason,
+  findPoison,
+  isPoison,
+  noOverrides,
+  poisonReasons,
+  togglePoison,
+  type PoisonOverrides,
+  type PoisonReport,
+} from "./poison";
 import { dumpOrder, nextSort, type JobSort, type SortKey } from "./sorting";
 import { DumpLoadError, parseDump } from "./load";
 import {
@@ -19,7 +29,7 @@ import type { Job, ParseIssue } from "./types";
 import { escapeHtml } from "./ui/escape";
 import { readFilterBar, renderFilterBar, renderNoMatches, showFilterCount } from "./ui/filters";
 import { plural } from "./ui/format";
-import { prettyPayload, renderPayload, showPayloadCheck } from "./ui/payload";
+import { prettyPayload, renderPayload, showPayloadCheck, type PoisonView } from "./ui/payload";
 import { renderGroupList } from "./ui/sidebar";
 import { markEdited, renderJobTable } from "./ui/table";
 
@@ -88,6 +98,18 @@ let options: FilterOptions = filterOptions([]);
 let filter: JobFilter = emptyFilter;
 let sort: JobSort = dumpOrder;
 let edits: Edits = noEdits;
+let report: PoisonReport = findPoison([]);
+let overrides: PoisonOverrides = noOverrides;
+
+const poisoned = (jobId: string) => isPoison(report, overrides, jobId);
+
+function poisonView(job: Job | null): PoisonView {
+  return {
+    poison: job !== null && poisoned(job.id),
+    reasons: job === null ? [] : poisonReasons(report, job.id).map(describeReason),
+    mark: job === null ? undefined : overrides.get(job.id),
+  };
+}
 
 function applyFilter(): void {
   const shown = filterJobs(jobs, filter);
@@ -117,9 +139,10 @@ function render(): void {
   if (noMatches) {
     renderNoMatches(jobsNode, jobs.length);
   } else {
-    renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort, edits);
+    renderJobTable(jobsNode, selectedGroup(state), state.selectedJobId, sort, edits, poisoned);
   }
-  renderPayload(payloadNode, selectedJob(state), edits);
+  const job = selectedJob(state);
+  renderPayload(payloadNode, job, edits, poisonView(job));
   renderRetrySummary();
 }
 
@@ -189,6 +212,8 @@ function loadFile(file: File): void {
       const loaded = toJobs(records, detection.producer);
 
       edits = noEdits;
+      report = findPoison(loaded);
+      overrides = noOverrides;
       resetFilters(loaded);
       applyFilter();
       dropzone.classList.add("is-compact");
@@ -205,6 +230,8 @@ function loadFile(file: File): void {
           : `Could not read ${file.name}.`;
       state = emptyState;
       edits = noEdits;
+      report = findPoison([]);
+      overrides = noOverrides;
       resetFilters([]);
       dropzone.classList.remove("is-compact");
       showLoadError(message);
@@ -283,6 +310,9 @@ payloadNode.addEventListener("click", (event) => {
   const job = selectedJob(state);
   if (job && closestData(event, "data-revert-payload")) {
     edits = revertPayload(edits, job.id);
+    render();
+  } else if (job && closestData(event, "data-toggle-poison")) {
+    overrides = togglePoison(report, overrides, job.id);
     render();
   }
 });

@@ -7,9 +7,16 @@ import { payloadPreview, plural, queueName, shortTime } from "./format";
 
 const EDITED_TAG = `<span class="tag" data-edited-tag title="Payload edited">edited</span>`;
 
-function renderRow(job: Job, selected: boolean, edits: Edits): string {
+const POISON_TAG = `<span class="tag tag-poison" title="Poison: retrying will not help">poison</span>`;
+
+export type PoisonCheck = (jobId: string) => boolean;
+
+function renderRow(job: Job, selected: boolean, edits: Edits, poisoned: PoisonCheck): string {
   const edited = isEdited(edits, job.id);
-  const classes = [selected ? "is-selected" : "", edited ? "is-edited" : ""].filter(Boolean).join(" ");
+  const poison = poisoned(job.id);
+  const classes = [selected ? "is-selected" : "", edited ? "is-edited" : "", poison ? "is-poison" : ""]
+    .filter(Boolean)
+    .join(" ");
 
   const id = escapeHtml(job.id);
   const checked = isIncluded(edits, job.id) ? " checked" : "";
@@ -17,7 +24,7 @@ function renderRow(job: Job, selected: boolean, edits: Edits): string {
   return `
     <tr class="${classes}" data-job-id="${id}">
       <td class="pick"><input type="checkbox" data-include-job="${id}" aria-label="Include ${id} in retry batch"${checked} /></td>
-      <td class="job-id">${escapeHtml(job.id)} ${edited ? EDITED_TAG : ""}</td>
+      <td class="job-id">${escapeHtml(job.id)} ${poison ? POISON_TAG : ""}${edited ? EDITED_TAG : ""}</td>
       <td>${escapeHtml(queueName(job.queue))}</td>
       <td class="num">${job.attempts}</td>
       <td class="time">${escapeHtml(shortTime(job.failedAt))}</td>
@@ -65,6 +72,7 @@ export function renderJobTable(
   selectedJobId: string | null,
   sort: JobSort,
   edits: Edits,
+  poisoned: PoisonCheck,
 ): void {
   if (!group) {
     container.innerHTML = "";
@@ -95,7 +103,7 @@ export function renderJobTable(
           </tr>
         </thead>
         <tbody>${sortJobs(group.jobs, sort)
-          .map((job) => renderRow(job, job.id === selectedJobId, edits))
+          .map((job) => renderRow(job, job.id === selectedJobId, edits, poisoned))
           .join("")}</tbody>
       </table>
     </div>`;

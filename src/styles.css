@@ -189,6 +189,48 @@ textarea.payload.is-invalid {
   border-color: var(--accent);
 }
 
+.jobs .tag-poison {
+  border-color: #b5474f;
+  color: #f0b9bd;
+}
+
+.jobs tbody tr.is-poison td.job-id {
+  color: #f0b9bd;
+}
+
+.poison-box {
+  margin-bottom: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+
+.poison-box.is-poison {
+  border-color: #6b2e33;
+  background: #22161a;
+}
+
+.poison-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.poison-box.is-poison strong {
+  color: #f0b9bd;
+}
+
+.poison-box ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.poison-box p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
 .jobs .pick {
   width: 1%;
   text-align: center;

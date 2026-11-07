@@ -1,4 +1,5 @@
 import { checkPayload, isEdited, isIncluded, payloadText, type Edits } from "../edits";
+import type { PoisonMark } from "../poison";
 import type { Job } from "../types";
 import { escapeHtml } from "./escape";
 import { queueName, shortTime } from "./format";
@@ -25,7 +26,35 @@ function errorLine(job: Job): string {
   return job.errorMessage === "" ? job.errorClass : `${job.errorClass}: ${job.errorMessage}`;
 }
 
-export function renderPayload(container: Element, job: Job | null, edits: Edits): void {
+export type PoisonView = {
+  poison: boolean;
+  /** What the rules said, even when an override disagrees. */
+  reasons: string[];
+  mark: PoisonMark | undefined;
+};
+
+function renderPoison(view: PoisonView): string {
+  const reasons =
+    view.reasons.length === 0 ? "" : `<ul>${view.reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`;
+  let note = "";
+  if (view.mark === "poison") {
+    note = "Marked as poison by hand.";
+  } else if (view.mark === "clear") {
+    note = "Rules flagged this job; cleared by hand.";
+  }
+
+  return `
+    <section class="poison-box${view.poison ? " is-poison" : ""}">
+      <div class="poison-head">
+        <strong>${view.poison ? "Poison" : "Not poison"}</strong>
+        <button type="button" class="revert" data-toggle-poison>${view.poison ? "Not poison" : "Mark as poison"}</button>
+      </div>
+      ${reasons}
+      ${note === "" ? "" : `<p>${note}</p>`}
+    </section>`;
+}
+
+export function renderPayload(container: Element, job: Job | null, edits: Edits, poison: PoisonView): void {
   if (!job) {
     container.innerHTML = `<p class="empty">Select a job to see its payload.</p>`;
     return;
@@ -45,6 +74,7 @@ export function renderPayload(container: Element, job: Job | null, edits: Edits)
     <dl class="job-fields">
       ${fields.map(([label, value]) => `<dt>${label}</dt><dd>${escapeHtml(value)}</dd>`).join("")}
     </dl>
+    ${renderPoison(poison)}
     <label class="include">
       <input type="checkbox" data-include-job="${escapeHtml(job.id)}"${isIncluded(edits, job.id) ? " checked" : ""} />
       Include in retry batch
