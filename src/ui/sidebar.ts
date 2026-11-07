@@ -1,16 +1,20 @@
 import { groupLabel, type ErrorGroup } from "../grouping";
+import { POISON_GROUP_ID } from "../poison";
 import { escapeHtml } from "./escape";
 import { queueSummary, truncate } from "./format";
 
 const MESSAGE_PREVIEW = 90;
 
 function renderGroup(group: ErrorGroup, selected: boolean): string {
+  const poison = group.id === POISON_GROUP_ID;
   const message =
     group.message === "" ? "" : `<span class="group-message">${escapeHtml(truncate(group.message, MESSAGE_PREVIEW))}</span>`;
+  const classes = ["group", selected ? "is-selected" : "", poison ? "is-poison-group" : ""].filter(Boolean).join(" ");
 
   return `
+    ${poison ? `<li class="group-divider">Set aside</li>` : ""}
     <li>
-      <button type="button" class="group${selected ? " is-selected" : ""}" data-group-id="${escapeHtml(group.id)}">
+      <button type="button" class="${classes}" data-group-id="${escapeHtml(group.id)}">
         <span class="group-head">
           <strong>${escapeHtml(groupLabel(group))}</strong>
           <span class="count">${group.count}</span>

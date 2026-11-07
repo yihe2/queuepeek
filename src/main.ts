@@ -8,6 +8,9 @@ import {
   findPoison,
   isPoison,
   noOverrides,
+  POISON_GROUP_ID,
+  poisonGroup,
+  poisonJobs,
   poisonReasons,
   togglePoison,
   type PoisonOverrides,
@@ -113,7 +116,9 @@ function poisonView(job: Job | null): PoisonView {
 
 function applyFilter(): void {
   const shown = filterJobs(jobs, filter);
-  state = loadGroups(groupJobs(shown), state);
+  const groups = groupJobs(shown);
+  const poison = poisonGroup(poisonJobs(shown, report, overrides));
+  state = loadGroups(poison ? [...groups, poison] : groups, state);
   showFilterCount(filtersNode, filter, shown.length, jobs.length);
   render();
 }
@@ -220,7 +225,9 @@ function loadFile(file: File): void {
       showLoadError(null);
       renderIssues(issues);
       status.textContent =
-        `${plural(loaded.length, "job")} · ${plural(state.groups.length, "group")} · ${detection.producer} · ` +
+        `${plural(loaded.length, "job")} · ` +
+        `${plural(state.groups.filter((group) => group.id !== POISON_GROUP_ID).length, "group")} · ` +
+        `${plural(poisonJobs(loaded, report, overrides).length, "poison job")} · ${detection.producer} · ` +
         `${plural(issues.length, "parse issue")}`;
     })
     .catch((error: unknown) => {
@@ -313,7 +320,7 @@ payloadNode.addEventListener("click", (event) => {
     render();
   } else if (job && closestData(event, "data-toggle-poison")) {
     overrides = togglePoison(report, overrides, job.id);
-    render();
+    applyFilter();
   }
 });
 

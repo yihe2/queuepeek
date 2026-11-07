@@ -1,4 +1,7 @@
+import type { ErrorGroup } from "./grouping";
 import { normalizeMessage } from "./grouping/messages";
+import { pickSample } from "./grouping/sample";
+import { summarizeJobs } from "./grouping/summary";
 import type { Job } from "./types";
 
 /**
@@ -104,6 +107,27 @@ export function togglePoison(report: PoisonReport, overrides: PoisonOverrides, j
 
 export function poisonJobs(jobs: Job[], report: PoisonReport, overrides: PoisonOverrides): Job[] {
   return jobs.filter((job) => isPoison(report, overrides, job.id));
+}
+
+/** Error group ids are `g-` plus a hash, so this cannot collide with one. */
+export const POISON_GROUP_ID = "poison";
+
+/**
+ * All poison jobs as one list, shaped like an error group so the sidebar, table, and selection
+ * work on it unchanged. The jobs also stay in their error groups.
+ */
+export function poisonGroup(jobs: Job[]): ErrorGroup | null {
+  if (jobs.length === 0) {
+    return null;
+  }
+  return {
+    id: POISON_GROUP_ID,
+    errorClass: "Poison",
+    message: "",
+    jobs,
+    sample: pickSample(jobs),
+    ...summarizeJobs(jobs),
+  };
 }
 
 export function describeReason(reason: PoisonReason): string {

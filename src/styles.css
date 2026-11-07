@@ -326,6 +326,24 @@ textarea.payload.is-invalid {
   text-align: center;
 }
 
+.group-divider {
+  margin-top: 0.9rem;
+  padding: 0.35rem 0.7rem 0.2rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.group.is-poison-group .group-head strong {
+  color: #f0b9bd;
+}
+
+.group.is-poison-group .count {
+  background: #4a2228;
+}
+
 .group-message,
 .group-queues {
   color: var(--muted);

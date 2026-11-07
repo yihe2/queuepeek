@@ -7,6 +7,8 @@ import {
   isPoison,
   markPoison,
   noOverrides,
+  POISON_GROUP_ID,
+  poisonGroup,
   poisonJobs,
   poisonReasons,
   togglePoison,
@@ -138,5 +140,24 @@ describe("manual overrides", () => {
     markPoison(noOverrides, "fresh", "poison");
 
     expect(noOverrides.size).toBe(0);
+  });
+});
+
+describe("poisonGroup", () => {
+  it("is absent when nothing is poison", () => {
+    expect(poisonGroup([])).toBeNull();
+  });
+
+  it("collects poison jobs from different error groups", () => {
+    const jobs = [
+      makeJob({ id: "p-1", queue: "orders", errorClass: "TimeoutError", attempts: 11 }),
+      makeJob({ id: "p-2", queue: "billing", errorClass: "CardDeclined", attempts: 4 }),
+    ];
+    const group = poisonGroup(jobs);
+
+    expect(group?.id).toBe(POISON_GROUP_ID);
+    expect(group?.count).toBe(2);
+    expect(group?.maxAttempts).toBe(11);
+    expect(group?.jobs.map((job) => job.id)).toEqual(["p-1", "p-2"]);
   });
 });
