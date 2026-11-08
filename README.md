@@ -62,8 +62,8 @@ npm test
 
 `npm run dev` opens the workbench. Drop a JSON or JSONL dump on the stage, pick an error group on the left, and click a job to read its payload.
 
-Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md). How failures are grouped: [docs/grouping.md](docs/grouping.md). Workbench panes: [docs/workbench.md](docs/workbench.md).
+Setup notes: [docs/setup.md](docs/setup.md). Fixture layout: [docs/fixtures.md](docs/fixtures.md). Loader behavior: [docs/load-errors.md](docs/load-errors.md). Vendor mappings: [docs/adapters.md](docs/adapters.md). How failures are grouped: [docs/grouping.md](docs/grouping.md). Workbench panes: [docs/workbench.md](docs/workbench.md). Poison rules: [docs/poison.md](docs/poison.md).
 
 ## Status
 
-The core workbench is feature-frozen: load a dump (SQS, Sidekiq, Redis, or generic JSON), group failures by error, filter and sort jobs, edit payloads with revert, and pick jobs for a retry batch. Poison rules, export, and saved sessions are next.
+The core workbench is feature-frozen: load a dump (SQS, Sidekiq, Redis, or generic JSON), group failures by error, filter and sort jobs, edit payloads with revert, and pick jobs for a retry batch. Poison detection (attempt threshold, repeated identical failures, manual override) keeps hopeless jobs out of that batch. Export and saved sessions are next.

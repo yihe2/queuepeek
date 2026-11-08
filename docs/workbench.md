@@ -4,7 +4,7 @@ The workbench is one page with three panes under the top bar and a status line a
 
 | Pane | Element | Shows |
 | --- | --- | --- |
-| Groups | `#groups` | error groups, largest first, with count, masked message, and busiest queues |
+| Groups | `#groups` | error groups, largest first, with count, masked message, and busiest queues; poison jobs under **Set aside** |
 | Stage | `#dropzone`, `#filters`, `#jobs` | drop zone, load errors, parse issues, the filter bar, and the selected group's job table |
 | Payload | `#payload` | the selected job's fields, its retry checkbox, and the payload editor |
 
@@ -66,7 +66,7 @@ The payload is editable. Changes are saved when the editor loses focus, and chec
 
 ## Retry Batch
 
-Each job has an **Include in retry batch** checkbox, both in the table's first column and above the editor. **Include all** in the table header adds every job currently shown in the group; with a filter active that means only the jobs that pass it. Once every shown job is in, the button becomes **Exclude all**.
+Each job has an **Include in retry batch** checkbox, both in the table's first column and above the editor. **Include all** in the table header adds every job currently shown in the group, except poison jobs (see [poison.md](poison.md)); with a filter active that means only the jobs that pass it. Once every eligible job is in, the button becomes **Exclude all**.
 
 The top bar counts jobs in the batch, edited jobs, and edited payloads that are invalid. Taking a job out of the batch keeps its edit, and editing or reverting keeps its checkbox.
 
