@@ -1,6 +1,6 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
-import { editPayload, isEdited, noEdits, retrySummary, revertPayload, setIncluded, type Edits } from "./edits";
+import { editPayload, isEdited, isIncluded, noEdits, retrySummary, revertPayload, setIncluded, type Edits } from "./edits";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import {
@@ -153,12 +153,16 @@ function render(): void {
 
 function renderRetrySummary(): void {
   const { included, edited, invalid } = retrySummary(jobs, edits);
+  const poisonIncluded = jobs.filter((job) => isIncluded(edits, job.id) && poisoned(job.id)).length;
   const parts = [`${included} in retry batch`, `${edited} edited`];
   if (invalid > 0) {
     parts.push(`${invalid} invalid`);
   }
+  if (poisonIncluded > 0) {
+    parts.push(`${poisonIncluded} poison in batch`);
+  }
   retryNode.textContent = jobs.length === 0 ? "" : parts.join(" · ");
-  retryNode.classList.toggle("has-invalid", invalid > 0);
+  retryNode.classList.toggle("has-invalid", invalid > 0 || poisonIncluded > 0);
 }
 
 function locate(issue: ParseIssue): string {
@@ -279,7 +283,8 @@ jobsNode.addEventListener("click", (event) => {
   const bulk = closestData(event, "data-include-group")?.dataset.includeGroup;
   const group = selectedGroup(state);
   if (bulk && group) {
-    edits = setIncluded(edits, group.jobs.map((job) => job.id), bulk === "on");
+    const targets = bulk === "on" ? group.jobs.filter((job) => !poisoned(job.id)) : group.jobs;
+    edits = setIncluded(edits, targets.map((job) => job.id), bulk === "on");
     render();
     return;
   }

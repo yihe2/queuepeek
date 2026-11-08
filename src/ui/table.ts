@@ -66,6 +66,23 @@ function sortHeader(label: string, key: SortKey, sort: JobSort, className = ""):
     </th>`;
 }
 
+/** Bulk include skips poison jobs; they can still be ticked one by one on purpose. */
+function bulkButton(group: ErrorGroup, edits: Edits, poisoned: PoisonCheck): string {
+  const eligible = group.jobs.filter((job) => !poisoned(job.id));
+  const skipped = group.jobs.length - eligible.length;
+
+  if (eligible.length > 0 && inclusion(eligible, edits) === "all") {
+    return `<button type="button" class="bulk-include" data-include-group="off">Exclude all</button>`;
+  }
+  if (eligible.length === 0) {
+    return inclusion(group.jobs, edits) === "none"
+      ? ""
+      : `<button type="button" class="bulk-include" data-include-group="off">Exclude all</button>`;
+  }
+  const label = skipped === 0 ? `Include all ${eligible.length}` : `Include ${eligible.length}, skip ${skipped} poison`;
+  return `<button type="button" class="bulk-include" data-include-group="on">${label}</button>`;
+}
+
 export function renderJobTable(
   container: Element,
   group: ErrorGroup | null,
@@ -80,14 +97,11 @@ export function renderJobTable(
   }
 
   const message = group.message === "" ? "" : `<p class="jobs-message">${escapeHtml(group.message)}</p>`;
-  const allIncluded = inclusion(group.jobs, edits) === "all";
-  const bulkLabel = allIncluded ? "Exclude all" : `Include all ${group.count}`;
-
   container.innerHTML = `
     <header class="jobs-head">
       <h2>${escapeHtml(groupLabel(group))}</h2>
       <span>${plural(group.count, "job")} · max ${group.maxAttempts} attempts</span>
-      <button type="button" class="bulk-include" data-include-group="${allIncluded ? "off" : "on"}">${bulkLabel}</button>
+      ${bulkButton(group, edits, poisoned)}
     </header>
     ${message}
     <div class="table-wrap">
