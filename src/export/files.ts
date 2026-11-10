@@ -4,6 +4,12 @@ import type { Job, Producer } from "../types";
 export const EXPORT_FORMAT = "queuepeek-export";
 export const EXPORT_VERSION = 1;
 
+/**
+ * `retry` is what to send back to the queue, with edits applied. `poison` and `leftover`
+ * describe what stays in the DLQ, so they always carry the payload exactly as dumped.
+ */
+export type ExportKind = "retry" | "poison" | "leftover";
+
 export type ExportRecord = {
   id: string;
   queue: string;
@@ -19,7 +25,7 @@ export type ExportRecord = {
 export type ExportFile = {
   format: typeof EXPORT_FORMAT;
   version: typeof EXPORT_VERSION;
-  kind: "retry";
+  kind: ExportKind;
   /** File name of the dump the jobs came from. */
   source: string;
   exportedAt: string;
@@ -50,9 +56,7 @@ function editedPayload(job: Job, text: string): unknown {
   return JSON.parse(text);
 }
 
-function toRecord(job: Job, edits: Edits): ExportRecord {
-  const { text } = getEdit(edits, job.id);
-
+function toRecord(job: Job, text: string | null): ExportRecord {
   return {
     id: job.id,
     queue: job.queue,
@@ -66,24 +70,31 @@ function toRecord(job: Job, edits: Edits): ExportRecord {
   };
 }
 
-export function buildRetryFile(source: string, jobs: Job[], edits: Edits, exportedAt: Date): ExportFile {
+function assertRetryable(jobs: Job[], edits: Edits): void {
   const invalid = jobs.filter((job) => {
     const { text } = getEdit(edits, job.id);
     return text !== null && !checkPayload(job, text).ok;
   });
-  if (invalid.length > 0) {
-    const ids = invalid.map((job) => job.id);
-    throw new ExportError(
-      `${ids.length === 1 ? "1 job has" : `${ids.length} jobs have`} an edited payload that is not valid JSON: ${ids.join(", ")}.`,
-      ids,
-    );
+  if (invalid.length === 0) {
+    return;
+  }
+  const ids = invalid.map((job) => job.id);
+  throw new ExportError(
+    `${ids.length === 1 ? "1 job has" : `${ids.length} jobs have`} an edited payload that is not valid JSON: ${ids.join(", ")}.`,
+    ids,
+  );
+}
+
+export function buildExport(kind: ExportKind, source: string, jobs: Job[], edits: Edits, exportedAt: Date): ExportFile {
+  if (kind === "retry") {
+    assertRetryable(jobs, edits);
   }
 
-  const records = jobs.map((job) => toRecord(job, edits));
+  const records = jobs.map((job) => toRecord(job, kind === "retry" ? getEdit(edits, job.id).text : null));
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
-    kind: "retry",
+    kind,
     source,
     exportedAt: exportedAt.toISOString(),
     count: records.length,
