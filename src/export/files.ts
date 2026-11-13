@@ -1,5 +1,6 @@
 import { checkPayload, getEdit, type Edits } from "../edits";
 import type { Job, Producer } from "../types";
+import { vendorIds, type VendorIds } from "./vendor";
 
 export const EXPORT_FORMAT = "queuepeek-export";
 export const EXPORT_VERSION = 1;
@@ -20,6 +21,7 @@ export type ExportRecord = {
   errorClass: string;
   errorMessage: string;
   failedAt: string;
+  vendor: VendorIds;
 };
 
 export type ExportFile = {
@@ -67,6 +69,7 @@ function toRecord(job: Job, text: string | null): ExportRecord {
     errorClass: job.errorClass,
     errorMessage: job.errorMessage,
     failedAt: job.failedAt,
+    vendor: vendorIds(job),
   };
 }
 
