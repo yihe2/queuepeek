@@ -1,6 +1,8 @@
 import { toJobs } from "./adapters";
 import { assertSingleProducer, detectDumpFormat, MixedDumpError } from "./detect";
 import { editPayload, isEdited, isIncluded, noEdits, retrySummary, revertPayload, setIncluded, type Edits } from "./edits";
+import { buildExport, ExportError, type ExportKind } from "./export/files";
+import { partitionJobs, type Partition } from "./export/partition";
 import { emptyFilter, filterJobs, filterOptions, type FilterOptions, type JobFilter } from "./filters";
 import { groupJobs } from "./grouping";
 import {
@@ -29,6 +31,7 @@ import {
 } from "./state";
 import "./styles.css";
 import type { Job, ParseIssue } from "./types";
+import { downloadJson, exportFileName } from "./ui/download";
 import { escapeHtml } from "./ui/escape";
 import { readFilterBar, renderFilterBar, renderNoMatches, showFilterCount } from "./ui/filters";
 import { plural } from "./ui/format";
@@ -47,6 +50,11 @@ root.innerHTML = `
     <h1>Queuepeek</h1>
     <p>Dead-letter workbench</p>
     <p class="retry-summary" id="retry-summary"></p>
+    <div class="exports" id="exports" hidden>
+      <button type="button" data-export="retry"></button>
+      <button type="button" data-export="leftover"></button>
+      <button type="button" data-export="poison"></button>
+    </div>
   </header>
   <div class="workspace">
     <aside class="sidebar">
@@ -92,6 +100,13 @@ const jobsNode = byId("jobs");
 const payloadNode = byId("payload");
 const status = byId("status");
 const retryNode = byId("retry-summary");
+const exportsNode = byId("exports");
+
+const EXPORT_LABELS: Record<ExportKind, string> = {
+  retry: "Export retry",
+  leftover: "Export leftover",
+  poison: "Export poison",
+};
 
 const MAX_SHOWN_ISSUES = 20;
 
@@ -103,6 +118,7 @@ let sort: JobSort = dumpOrder;
 let edits: Edits = noEdits;
 let report: PoisonReport = findPoison([]);
 let overrides: PoisonOverrides = noOverrides;
+let sourceName = "";
 
 const poisoned = (jobId: string) => isPoison(report, overrides, jobId);
 
@@ -163,6 +179,35 @@ function renderRetrySummary(): void {
   }
   retryNode.textContent = jobs.length === 0 ? "" : parts.join(" · ");
   retryNode.classList.toggle("has-invalid", invalid > 0 || poisonIncluded > 0);
+  renderExports();
+}
+
+function currentPartition(): Partition {
+  return partitionJobs(jobs, edits, poisoned);
+}
+
+function renderExports(): void {
+  const partition = currentPartition();
+
+  exportsNode.toggleAttribute("hidden", jobs.length === 0);
+  for (const button of exportsNode.querySelectorAll<HTMLButtonElement>("[data-export]")) {
+    const kind = button.dataset.export as ExportKind;
+    button.textContent = `${EXPORT_LABELS[kind]} (${partition[kind].length})`;
+  }
+}
+
+function exportJobs(kind: ExportKind): void {
+  const at = new Date();
+  try {
+    const file = buildExport(kind, sourceName, currentPartition()[kind], edits, at);
+    downloadJson(exportFileName(sourceName, kind, at), file);
+    status.textContent = `Exported ${plural(file.count, "job")} to ${exportFileName(sourceName, kind, at)}.`;
+  } catch (error) {
+    if (!(error instanceof ExportError)) {
+      throw error;
+    }
+    status.textContent = error.message;
+  }
 }
 
 function locate(issue: ParseIssue): string {
@@ -220,6 +265,7 @@ function loadFile(file: File): void {
       assertSingleProducer(detection);
       const loaded = toJobs(records, detection.producer);
 
+      sourceName = file.name;
       edits = noEdits;
       report = findPoison(loaded);
       overrides = noOverrides;
@@ -240,6 +286,7 @@ function loadFile(file: File): void {
           ? error.message
           : `Could not read ${file.name}.`;
       state = emptyState;
+      sourceName = "";
       edits = noEdits;
       report = findPoison([]);
       overrides = noOverrides;
@@ -251,6 +298,13 @@ function loadFile(file: File): void {
       status.textContent = "No dump loaded.";
     });
 }
+
+exportsNode.addEventListener("click", (event) => {
+  const kind = closestData(event, "data-export")?.dataset.export;
+  if (kind) {
+    exportJobs(kind as ExportKind);
+  }
+});
 
 groupsNode.addEventListener("click", (event) => {
   const groupId = closestData(event, "data-group-id")?.dataset.groupId;
