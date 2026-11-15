@@ -19,8 +19,8 @@ Workbench frozen; the remaining items belong to the poison and export phase.
 - [x] generic job adapter
 - [x] group by error
 - [x] payload inspect / edit
-- [ ] poison list
-- [ ] retry and leftover exports
+- [x] poison list
+- [x] retry and leftover exports
 - [x] sample dumps
 - [x] parser tests
 

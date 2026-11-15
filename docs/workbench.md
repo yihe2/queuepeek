@@ -70,7 +70,7 @@ Each job has an **Include in retry batch** checkbox, both in the table's first c
 
 The top bar counts jobs in the batch, edited jobs, and edited payloads that are invalid. Taking a job out of the batch keeps its edit, and editing or reverting keeps its checkbox.
 
-Edits and the batch live in memory and are cleared when a new dump is loaded. Writing the batch out is the export step and comes later.
+Edits and the batch live in memory and are cleared when a new dump is loaded. The **Export** buttons in the top bar write the batch, the poison jobs, and the leftovers to files; see [export.md](export.md).
 
 ## Load Errors
 
