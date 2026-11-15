@@ -198,6 +198,12 @@ textarea.payload.is-invalid {
   border-color: var(--accent);
 }
 
+.exports button:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.6;
+}
+
 .exports button[data-export="retry"] {
   border-color: var(--accent);
 }
@@ -693,4 +699,8 @@ textarea.payload.is-invalid {
   background: var(--panel);
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.status.is-error {
+  color: #f0b9bd;
 }

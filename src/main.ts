@@ -192,21 +192,48 @@ function renderExports(): void {
   exportsNode.toggleAttribute("hidden", jobs.length === 0);
   for (const button of exportsNode.querySelectorAll<HTMLButtonElement>("[data-export]")) {
     const kind = button.dataset.export as ExportKind;
-    button.textContent = `${EXPORT_LABELS[kind]} (${partition[kind].length})`;
+    const count = partition[kind].length;
+    button.textContent = `${EXPORT_LABELS[kind]} (${count})`;
+    button.disabled = count === 0;
+    button.title = count === 0 ? "Nothing to export" : "";
   }
+}
+
+function setStatus(text: string, isError = false): void {
+  status.textContent = text;
+  status.classList.toggle("is-error", isError);
+}
+
+/** Brings a job into view, clearing filters if they hide it, and puts the caret in its editor. */
+function focusJob(jobId: string): void {
+  const find = () =>
+    state.groups.find((group) => group.id !== POISON_GROUP_ID && group.jobs.some((job) => job.id === jobId));
+  let group = find();
+  if (!group) {
+    clearFilters();
+    group = find();
+  }
+  if (!group) {
+    return;
+  }
+  state = selectJob(selectGroup(state, group.id), jobId);
+  render();
+  payloadNode.querySelector<HTMLTextAreaElement>("[data-payload-editor]")?.focus();
 }
 
 function exportJobs(kind: ExportKind): void {
   const at = new Date();
   try {
     const file = buildExport(kind, sourceName, currentPartition()[kind], edits, at);
-    downloadJson(exportFileName(sourceName, kind, at), file);
-    status.textContent = `Exported ${plural(file.count, "job")} to ${exportFileName(sourceName, kind, at)}.`;
+    const name = exportFileName(sourceName, kind, at);
+    downloadJson(name, file);
+    setStatus(`Exported ${plural(file.count, "job")} to ${name}.`);
   } catch (error) {
     if (!(error instanceof ExportError)) {
       throw error;
     }
-    status.textContent = error.message;
+    setStatus(`Retry export refused. ${error.message} Fix or revert it, then export again.`, true);
+    focusJob(error.jobIds[0]);
   }
 }
 
@@ -274,11 +301,12 @@ function loadFile(file: File): void {
       dropzone.classList.add("is-compact");
       showLoadError(null);
       renderIssues(issues);
-      status.textContent =
+      setStatus(
         `${plural(loaded.length, "job")} · ` +
-        `${plural(state.groups.filter((group) => group.id !== POISON_GROUP_ID).length, "group")} · ` +
-        `${plural(poisonJobs(loaded, report, overrides).length, "poison job")} · ${detection.producer} · ` +
-        `${plural(issues.length, "parse issue")}`;
+          `${plural(state.groups.filter((group) => group.id !== POISON_GROUP_ID).length, "group")} · ` +
+          `${plural(poisonJobs(loaded, report, overrides).length, "poison job")} · ${detection.producer} · ` +
+          `${plural(issues.length, "parse issue")}`,
+      );
     })
     .catch((error: unknown) => {
       const message =
@@ -295,7 +323,7 @@ function loadFile(file: File): void {
       showLoadError(message);
       renderIssues([]);
       render();
-      status.textContent = "No dump loaded.";
+      setStatus("No dump loaded.");
     });
 }
 
